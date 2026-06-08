@@ -1,0 +1,1486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kerala Fiscal Health Dashboard</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,900&family=Mukta:wght@400;500;600;700;800&family=Noto+Serif+Malayalam:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+<style>
+:root{
+  --teal:#0e6b73;--teal-d:#0a4a52;--navy:#0c3640;
+  --gold:#d6932b;--gold-d:#b8791f;
+  --red:#c0392b;--blue:#2c6e8f;--green:#1f7a5a;--grayb:#9aa7a0;
+  --ink:#15323a;--soft:#5d6f73;--line:#dde4e3;
+  --sidebar-w:200px;
+  --hdr-h:62px;
+  
+  --card-shadow:0 4px 18px rgba(12,54,64,.08);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;font-family:"Mukta",sans-serif;color:var(--ink)}
+
+/* ═══ LANDING PAGE ════════════════════════════════════════════ */
+#landing{
+  position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
+  background:#0c2a1e;overflow:hidden;
+}
+#landingSvg{position:absolute;inset:0;width:100%;height:100%}
+/* Light landing overlay */
+.land-overlay-bg{
+  position:absolute;inset:0;
+  background:linear-gradient(105deg,rgba(255,255,252,.78) 0%,rgba(255,255,252,.65) 50%,rgba(244,241,234,.55) 100%);
+  z-index:1;
+}
+.land-overlay{position:relative;z-index:2}
+
+.land-overlay{
+  position:relative;z-index:2;flex:1;
+  display:grid;grid-template-columns:55% 45%;
+  padding:0 52px 0 58px;align-items:center;gap:24px;
+}
+.land-left{padding:0}
+.land-gov{font-size:.7rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;
+  color:#0e6b73;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.land-gov::before{content:"";width:28px;height:2px;background:#d6932b}
+
+
+.land-h1{
+  font-family:"Fraunces";font-weight:900;
+  font-size:clamp(42px,5.5vw,72px);
+  line-height:.97;letter-spacing:-.02em;
+  color:#0c3640;text-shadow:0 2px 12px rgba(0,0,0,.10);
+}
+.land-h1 em{font-style:italic;color:#b8791f}
+.land-ml{color:#0e6b73 !important;font-family:"Noto Serif Malayalam",serif;font-size:clamp(16px,2vw,24px);
+  color:#ffe7bd;margin-top:10px;font-weight:700}
+.land-sub{color:rgba(255,255,255,.75);font-size:15px;margin-top:14px;
+  line-height:1.6;max-width:480px}
+
+/* Nav button cards (right side – like Camerry's action buttons) */
+.land-right{
+  display:flex;flex-direction:column;gap:10px;
+}
+.nav-card{
+  display:flex;flex-direction:row;align-items:center;
+  gap:16px;flex:1;
+  background:rgba(255,255,255,.88);
+  border:1px solid rgba(214,147,43,.22);
+  border-left:4px solid var(--gold);
+  border-radius:14px;padding:18px 20px;
+  cursor:pointer;
+  transition:all .25s cubic-bezier(.4,0,.2,1);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  color:#0c3640;text-align:left;width:100%;
+  box-shadow:0 2px 16px rgba(12,54,64,.10);
+}
+.nav-card:hover{
+  background:rgba(255,255,255,.97);
+  transform:translateX(5px);
+  box-shadow:0 5px 24px rgba(12,54,64,.16);
+}
+.nav-card .nc-icon{width:40px;height:40px;border-radius:10px;background:rgba(214,147,43,.12);display:grid;place-items:center;font-size:1.1rem;color:var(--gold-d);flex-shrink:0}
+.nav-card .nc-body{flex:1;min-width:0}
+.nav-card .nc-title{font-family:"Fraunces";font-weight:700;font-size:1rem;color:#0c3640;margin-bottom:3px}
+.nav-card .nc-desc{font-size:.78rem;color:#5d6f73;line-height:1.4}
+.nav-card .nc-arrow{color:var(--gold-d);font-size:.9rem;margin-left:auto;flex-shrink:0}
+.nav-card:hover .nc-arrow{color:var(--gold-d);font-size:.9rem;margin-left:auto;flex-shrink:0}
+
+/* Landing bottom strip */
+.land-foot{
+  position:relative;z-index:2;
+  background:rgba(8,18,12,.9);
+  padding:10px 56px;
+  display:flex;justify-content:space-between;align-items:center;
+  border-top:2px solid rgba(214,147,43,.4);flex-shrink:0;
+}
+.land-foot span{font-size:.7rem;color:rgba(255,255,255,.55);font-weight:500;letter-spacing:.03em}
+.land-foot .ml{font-family:"Noto Serif Malayalam",serif;color:rgba(255,214,120,.6)}
+
+/* ═══ APP SHELL ════════════════════════════════════════════════ */
+#app{
+  position:fixed;inset:0;display:none;/* shown via JS */
+}
+.app-inner{display:flex;height:100vh;overflow:hidden}
+
+/* ── Left sidebar (Camerry's filter/slicer panel) ── */
+.sidebar{
+  width:var(--sidebar-w);
+  background:linear-gradient(175deg,var(--navy) 0%,var(--teal-d) 100%);
+  display:flex;flex-direction:column;flex-shrink:0;z-index:10;
+  border-right:1px solid rgba(255,255,255,.08);overflow:hidden;
+}
+.sb-brand{padding:14px 16px 10px;border-bottom:1px solid rgba(255,255,255,.1);
+  display:flex;align-items:center;gap:10px;flex-shrink:0}
+
+
+.sb-name{font-family:"Fraunces";font-weight:900;font-size:.8rem;color:#fff;
+  line-height:1.1}
+.sb-name .ml{font-family:"Noto Serif Malayalam",serif;font-size:.58rem;
+  color:#ffe7bd;opacity:.85;display:block}
+
+/* Slicer / filter section (like Camerry's AGE / REGION slicers) */
+.sb-slicer{padding:12px 14px 8px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+.sb-slicer-lbl{font-size:.56rem;font-weight:800;color:#8fb0ad;
+  text-transform:uppercase;letter-spacing:.2em;margin-bottom:5px}
+.sb-select{width:100%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  color:#fff;border-radius:6px;padding:5px 8px;font-size:.74rem;font-family:"Mukta";
+  cursor:pointer;outline:none}
+.sb-select option{background:#0a4a52;color:#fff}
+
+/* Section navigation list */
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0;min-height:0}
+.sb-nav-lbl{font-size:.54rem;font-weight:800;color:#8fb0ad;
+  text-transform:uppercase;letter-spacing:.2em;padding:10px 14px 4px}
+.sb-item{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;
+  color:#a7c4c2;border-left:3px solid transparent;transition:.18s;
+  font-size:.8rem;font-weight:600;
+}
+.sb-item i{width:18px;font-size:.9rem}
+.sb-item:hover{background:rgba(255,255,255,.07);color:#fff}
+.sb-item.active{background:rgba(255,255,255,.12);border-left-color:var(--gold);color:#fff}
+
+.sb-foot{padding:10px 14px;border-top:1px solid rgba(255,255,255,.1);flex-shrink:0}
+.sb-home-btn{
+  width:100%;background:rgba(214,147,43,.2);border:1px solid rgba(214,147,43,.4);
+  color:var(--gold);border-radius:7px;padding:8px;font-size:.76rem;font-weight:700;
+  cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:7px;
+  font-family:"Mukta";margin-bottom:6px;
+}
+.sb-home-btn:hover{background:var(--gold);color:#2a1800}
+.sb-foot-txt{font-size:.58rem;color:#5d8a86;text-align:center;line-height:1.4}
+.sb-foot-txt .ml{font-family:"Noto Serif Malayalam",serif}
+
+/* ── Main content area ── */
+.main-content{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+
+/* Header band (Camerry's top title shape) */
+.page-header{
+  height:var(--hdr-h);
+  background:linear-gradient(100deg,var(--teal-d) 0%,var(--teal) 100%);
+  display:flex;align-items:center;padding:0 22px;gap:14px;flex-shrink:0;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.hdr-left{display:flex;align-items:center;gap:12px;flex:1;min-width:0}
+
+.hdr-title{font-family:"Fraunces";font-weight:600;font-size:1.05rem;
+  color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-ml{font-family:"Noto Serif Malayalam",serif;font-size:.68rem;
+  color:#ffe7bd;opacity:.8;margin-left:4px}
+.hdr-filters{display:flex;align-items:center;gap:10px;flex-shrink:0}
+
+
+/* Kasavu gold accent line (below header – like Camerry's thin band) */
+.kasavu-line{
+  height:4px;flex-shrink:0;
+  background:linear-gradient(90deg,var(--gold-d) 0%,var(--gold) 40%,var(--gold-d) 100%);
+}
+
+/* ── Canvas (Kerala pattern background) ── */
+.canvas{
+    flex:1;overflow-y:auto;overflow-x:hidden;
+    padding:14px;min-height:0;
+    background-color:#f0f5f0;
+    background-image:
+      repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(214,147,43,.055) 39px,rgba(214,147,43,.055) 40px),
+      repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(214,147,43,.035) 39px,rgba(214,147,43,.035) 40px);
+    position:relative;
+  }
+/* Faint palm silhouette in canvas corner */
+.canvas-art{
+  position:absolute;right:0;bottom:0;width:180px;height:260px;
+  pointer-events:none;z-index:0;opacity:.045;
+}
+
+/* ── Page sections grid ── */
+.page-section{display:none;width:100%;height:100%;min-height:0;position:relative;z-index:1}
+.page-section.active{
+    display:flex;flex-direction:column;gap:16px;
+    animation:fade .3s ease;
+  }
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* KPI row */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:4px}
+.kpi-card{background:#fff;padding:9px 13px;border-radius:10px;
+  border-top:4px solid var(--grayb);box-shadow:var(--card-shadow);display:flex;flex-direction:column}
+.kpi-card.teal{border-top-color:var(--teal)}.kpi-card.gold{border-top-color:var(--gold)}
+.kpi-card.blue{border-top-color:var(--blue)}.kpi-card.red{border-top-color:var(--red)}.kpi-card.green{border-top-color:var(--green)}
+.kpi-label{font-size:.58rem;color:var(--soft);font-weight:800;text-transform:uppercase;letter-spacing:.3px}
+.kpi-val{font-family:"Fraunces";font-size:1.3rem;font-weight:900;color:var(--teal-d);margin:2px 0 1px;line-height:1}
+.kpi-card.red .kpi-val{color:var(--red)}
+.kpi-sub{font-size:.64rem;font-weight:600;color:var(--soft)}
+.kpi-sub .up{color:var(--red)}.kpi-sub .ok{color:var(--green)}
+
+/* Chart rows */
+.row.g-4{--bs-gutter-y:12px!important;align-items:stretch;margin-bottom:0}
+.page-section .row>[class*='col-']{display:flex;flex-direction:column}
+
+/* Widget card */
+.widget{background:#fff;border-radius:11px;
+  padding:11px 14px;box-shadow:var(--card-shadow);display:flex;flex-direction:column;
+  border:1px solid var(--line);width:100%;}
+.widget-header{display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:6px;flex:0 0 auto;gap:8px}
+.widget-title{font-weight:800;color:var(--teal-d);font-size:.78rem;
+  text-transform:uppercase;letter-spacing:.4px}
+.widget-title.warn{color:var(--red)}
+  .widget-header{flex-wrap:wrap!important;gap:3px 8px!important}
+  .widget-title{order:1}
+  .toggle-group{order:2}.abv-btn{order:2}.form-select-sm{order:2}
+  .widget-subtitle{
+    order:10;flex:0 0 100%;
+    font-size:.67rem;color:#3a7a72;font-weight:600;
+    line-height:1.3;font-style:normal;
+    background:#f0faf8;border-left:3px solid var(--teal);
+    padding:3px 8px;border-radius:0 4px 4px 0;
+    margin-top:1px;margin-bottom:5px;
+  }
+
+/* Chart container: explicit calc height */
+.chart-container{
+    position:relative;width:100%;
+    height:300px;overflow:hidden;
+    contain:layout paint;border-radius:4px;
+  }
+  .chart-container canvas{display:block}
+
+/* Inference box */
+.inference-box{background:#fbf6e9;border-left:4px solid var(--gold);
+  padding:5px 10px;margin-top:6px;border-radius:5px;font-size:.7rem;
+  color:#5a4a22;line-height:1.35;flex:0 0 auto}
+.inference-box b{color:var(--gold-d);display:inline;margin-right:4px;
+  font-size:.6rem;text-transform:uppercase;letter-spacing:.3px}
+
+/* Alerts */
+.alert-scroll{flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:4px}
+.alert-item{padding:7px 9px;border-radius:7px;margin-bottom:6px;background:#fcf0ee;
+  border:1px solid #f3d6d1;display:flex;gap:8px;font-size:.73rem;line-height:1.3}
+.alert-item i{color:var(--red);margin-top:2px}
+.alert-item.amber{background:#fdf6e7;border-color:#f0e0bd}.alert-item.amber i{color:var(--gold-d)}
+.alert-title{font-weight:800;color:#8e2a20;display:block;margin-bottom:1px}
+.alert-item.amber .alert-title{color:#856404}
+
+/* Toggles */
+.toggle-group{background:#eef3f2;padding:3px;border-radius:7px;display:inline-flex}
+.toggle-btn{border:none;background:none;padding:4px 9px;font-size:.68rem;font-weight:800;
+  color:var(--soft);border-radius:5px;cursor:pointer;transition:.15s}
+.toggle-btn.active{background:#fff;color:var(--teal);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-thumb{background:#c4d2d0;border-radius:4px}
+
+  /* MaxEd logo in header */
+  .hdr-maxed-logo{ height:32px; width:auto; ; opacity:1; flex-shrink:0; cursor:pointer; }
+
+  /* MaxEd logo in sidebar footer */
+  .sb-maxed-logo{ width:90px; height:auto; filter:brightness(0) invert(1); opacity:.75; display:block; margin:0 auto 6px; }
+
+  /* MaxEd logo on landing */
+  .land-maxed-logo{ height:38px; width:auto; ; opacity:1; }
+
+  /* ABV button in header */
+  .abv-btn{
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);
+    color:#fff;border-radius:7px;padding:5px 12px;font-size:.72rem;font-weight:800;
+    cursor:pointer;display:flex;align-items:center;gap:6px;transition:.18s;
+    font-family:"Mukta";letter-spacing:.04em;flex-shrink:0;
+  }
+  .abv-btn:hover{ background:rgba(255,255,255,.28); }
+
+  /* Slide-in acronym panel */
+  .abv-panel{
+    position:fixed;top:0;right:-400px;width:380px;height:100vh;
+    background:#fff;z-index:500;
+    box-shadow:-8px 0 40px rgba(12,54,64,.18);
+    display:flex;flex-direction:column;
+    transition:right .3s cubic-bezier(.4,0,.2,1);
+    border-left:3px solid var(--teal);
+  }
+  .abv-panel.open{ right:0; }
+  .abv-head{
+    background:linear-gradient(100deg,var(--teal-d),var(--teal));
+    padding:16px 18px;display:flex;justify-content:space-between;align-items:center;
+    flex-shrink:0;
+  }
+  .abv-head-title{ font-family:"Fraunces";font-weight:700;font-size:1rem;color:#fff; }
+  .abv-head-sub{ font-size:.65rem;color:rgba(255,255,255,.65);margin-top:1px; }
+  .abv-close{
+    background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;
+    width:30px;height:30px;font-size:.9rem;cursor:pointer;display:grid;place-items:center;
+  }
+  .abv-close:hover{ background:var(--red); }
+  .abv-body{ flex:1;overflow-y:auto;padding:14px 16px; }
+  .abv-row{
+    display:grid;grid-template-columns:80px 1fr;gap:6px 12px;
+    padding:8px 0;border-bottom:1px solid var(--line);align-items:start;
+  }
+  .abv-row:last-child{ border-bottom:none; }
+  .abv-term{
+    font-family:"Fraunces";font-weight:700;font-size:.85rem;
+    color:var(--teal-d);letter-spacing:.02em;
+  }
+  .abv-def{ font-size:.78rem;color:var(--ink);line-height:1.45; }
+  .abv-def span{ display:block;font-size:.7rem;color:var(--soft);margin-top:1px; }
+  .abv-kasavu{ height:3px;background:linear-gradient(90deg,var(--gold-d),var(--gold),var(--gold-d)); }
+  /* backdrop */
+  .abv-backdrop{
+    position:fixed;inset:0;background:rgba(12,54,64,.25);z-index:499;
+    display:none;backdrop-filter:blur(2px);
+  }
+  .abv-backdrop.open{ display:block; }
+
+
+  /* KPI info button */
+  .kpi-card{position:relative}
+  .kpi-info-btn{
+    position:absolute;top:8px;right:8px;
+    width:18px;height:18px;border-radius:50%;
+    background:var(--teal);color:#fff;border:none;
+    font-size:.62rem;font-weight:900;cursor:pointer;
+    display:grid;place-items:center;opacity:.7;
+    transition:.15s;line-height:1;font-family:'Mukta';
+    z-index:2;
+  }
+  .kpi-info-btn:hover{opacity:1;transform:scale(1.15)}
+
+  /* KPI popup panel */
+  #kpiPopup{
+    position:fixed;z-index:600;width:320px;
+    background:#fff;border-radius:14px;
+    box-shadow:0 12px 48px rgba(12,54,64,.22);
+    border:1px solid var(--line);
+    display:none;overflow:hidden;
+  }
+  #kpiPopup.open{display:block;animation:fade .2s ease}
+  .kpi-pop-head{
+    background:linear-gradient(100deg,var(--teal-d),var(--teal));
+    padding:13px 16px;display:flex;justify-content:space-between;align-items:flex-start;
+  }
+  .kpi-pop-label{font-size:.62rem;font-weight:800;text-transform:uppercase;
+    letter-spacing:.08em;color:rgba(255,255,255,.7);margin-bottom:3px}
+  .kpi-pop-val{font-family:'Fraunces';font-weight:900;font-size:1.4rem;color:#fff;line-height:1}
+  .kpi-pop-close{background:rgba(255,255,255,.18);border:none;color:#fff;
+    border-radius:6px;width:26px;height:26px;cursor:pointer;font-size:.8rem;
+    display:grid;place-items:center;flex-shrink:0}
+  .kpi-pop-close:hover{background:var(--red)}
+  .kpi-pop-body{padding:14px 16px}
+  .kpi-pop-what{font-size:.78rem;color:var(--ink);line-height:1.5;margin-bottom:10px}
+  .kpi-pop-row{display:flex;gap:8px;margin-top:8px}
+  .kpi-pop-tag{font-size:.65rem;font-weight:800;padding:3px 9px;border-radius:20px;
+    text-transform:uppercase;letter-spacing:.04em}
+  .kpi-pop-tag.good{background:#e8f5ee;color:#1f7a5a}
+  .kpi-pop-tag.bad{background:#fdecea;color:#c0392b}
+  .kpi-pop-tag.mid{background:#fdf6e7;color:#856404}
+  .kpi-pop-status{font-size:.75rem;font-weight:600;display:flex;align-items:center;
+    gap:5px;margin-top:8px;padding:7px 10px;border-radius:7px;background:#f4f7f9}
+  .kpi-pop-status i{font-size:.7rem}
+
+
+  /* KPI Guide panel */
+  #kpi-panel{
+    position:fixed;top:0;left:-420px;width:400px;height:100vh;
+    background:#fff;z-index:500;
+    box-shadow:8px 0 40px rgba(12,54,64,.18);
+    display:flex;flex-direction:column;
+    transition:left .3s cubic-bezier(.4,0,.2,1);
+    border-right:3px solid var(--gold);
+  }
+  #kpi-panel.open{left:0;}
+  .kpi-panel-head{
+    background:linear-gradient(100deg,var(--teal-d),var(--teal));
+    padding:16px 18px;display:flex;justify-content:space-between;align-items:center;
+    flex-shrink:0;
+  }
+  .kpi-panel-title{font-family:"Fraunces";font-weight:700;font-size:1rem;color:#fff;}
+  .kpi-panel-sub{font-size:.65rem;color:rgba(255,255,255,.65);margin-top:1px;}
+  .kpi-panel-close{
+    background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:6px;
+    width:30px;height:30px;font-size:.9rem;cursor:pointer;display:grid;place-items:center;
+  }
+  .kpi-panel-close:hover{background:var(--red);}
+  .kpi-panel-body{flex:1;overflow-y:auto;padding:14px 16px;}
+  .kpi-guide-card{
+    background:#f8fafa;border:1px solid var(--line);border-left:4px solid var(--gold);
+    border-radius:8px;padding:12px 14px;margin-bottom:12px;
+  }
+  .kpi-guide-label{
+    font-size:.6rem;font-weight:800;color:var(--soft);
+    text-transform:uppercase;letter-spacing:.3px;margin-bottom:3px;
+  }
+  .kpi-guide-value{
+    font-family:"Fraunces";font-weight:700;font-size:1.1rem;
+    color:var(--teal-d);margin-bottom:6px;
+  }
+  .kpi-guide-value.red{color:var(--red);}
+  .kpi-guide-desc{font-size:.78rem;color:var(--ink);line-height:1.45;}
+  .kpi-guide-kasavu{height:3px;background:linear-gradient(90deg,var(--gold-d),var(--gold),var(--gold-d));flex-shrink:0;}
+  .kpi-guide-btn{
+    background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.28);
+    color:#fff;border-radius:7px;padding:5px 12px;font-size:.72rem;font-weight:800;
+    cursor:pointer;display:flex;align-items:center;gap:6px;transition:.18s;
+    font-family:"Mukta";letter-spacing:.04em;flex-shrink:0;
+  }
+  .kpi-guide-btn:hover{background:rgba(255,255,255,.28);}
+  #kpi-backdrop{
+    position:fixed;inset:0;background:rgba(12,54,64,.25);z-index:499;
+    display:none;backdrop-filter:blur(2px);
+  }
+  #kpi-backdrop.open{display:block;}
+
+
+/* State groups info panel */
+.state-groups-panel{
+  background:#f8fafa;border:1px solid var(--line);border-radius:10px;
+  padding:16px 20px;margin-top:14px;
+}
+.sg-title{font-size:.72rem;font-weight:800;color:var(--soft);
+  text-transform:uppercase;letter-spacing:.3px;margin-bottom:12px;}
+.sg-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;align-items:flex-start;}
+.sg-row:last-child{margin-bottom:0;}
+.sg-label{
+  display:flex;align-items:center;gap:7px;flex-shrink:0;
+  min-width:180px;
+}
+.sg-dot{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+.sg-dot.teal{background:#0e6b73;}
+.sg-dot.blue{background:#2c6e8f;}
+.sg-dot.gold{background:#d6932b;}
+.sg-dot.red {background:#c0392b;}
+.sg-lbl-text{font-size:.76rem;font-weight:700;color:var(--ink);}
+.sg-states{font-size:.72rem;color:var(--soft);flex:1;line-height:1.55;}
+.sg-states span{
+  display:inline-block;background:rgba(12,54,64,.07);
+  border-radius:4px;padding:1px 7px;margin:2px 3px 2px 0;
+  font-size:.68rem;color:var(--ink);font-weight:600;
+}
+
+
+/* Glossary strip */
+.glossary-strip{
+  background:#f0f4f4;border-top:2px solid var(--line);border-radius:0 0 10px 10px;
+  padding:10px 18px;margin-top:18px;
+}
+.glossary-strip-title{font-size:.6rem;font-weight:800;color:var(--soft);
+  text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px;}
+.glossary-terms{display:flex;flex-wrap:wrap;gap:4px 14px;}
+.gterm{font-size:.67rem;color:var(--ink);}
+.gterm b{color:var(--teal-d);font-weight:700;}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════ LANDING PAGE ═══════ -->
+<div id="landing">
+  <svg id="landingSvg" viewBox="0 0 1280 720" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+<defs>
+  <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#1a3a5c"/><stop offset="0.4" stop-color="#c07840"/>
+    <stop offset="0.7" stop-color="#e8a855"/><stop offset="1" stop-color="#2a5f4f"/>
+  </linearGradient>
+  <linearGradient id="waterG" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#2d7a72" stop-opacity=".9"/>
+    <stop offset="1" stop-color="#0a3d44"/>
+  </linearGradient>
+  <radialGradient id="sunG" cx="50%" cy="50%" r="50%">
+    <stop offset="0" stop-color="#fff8c0"/><stop offset="0.4" stop-color="#f5c842"/>
+    <stop offset="1" stop-color="#e88830" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="blur"><feGaussianBlur stdDeviation="7"/></filter>
+</defs>
+<!-- Apply blur to entire scene via group -->
+<g filter="url(#blur)">
+<!-- Sky -->
+<rect width="1280" height="480" fill="url(#skyG)"/>
+<!-- Sun glow -->
+<circle cx="920" cy="180" r="90" fill="url(#sunG)" opacity=".7"/>
+<circle cx="920" cy="180" r="38" fill="#fff5a0" opacity=".95" filter="url(#glow)"/>
+<!-- Clouds -->
+<ellipse cx="300" cy="90" rx="80" ry="22" fill="#fff" opacity=".18"/>
+<ellipse cx="360" cy="80" rx="110" ry="28" fill="#fff" opacity=".14"/>
+<ellipse cx="700" cy="60" rx="70" ry="18" fill="#fff" opacity=".12"/>
+<ellipse cx="1100" cy="110" rx="90" ry="24" fill="#fff8e0" opacity=".15"/>
+<!-- Far hills -->
+<path d="M0 320 Q180 210 350 260 Q520 300 700 230 Q880 160 1100 240 Q1190 270 1280 250 V480 H0 Z" fill="#1a5c42" opacity=".55"/>
+<path d="M0 360 Q200 280 380 310 Q560 340 740 280 Q920 220 1100 290 Q1200 320 1280 300 V480 H0 Z" fill="#1f7a55" opacity=".65"/>
+<path d="M0 400 Q150 340 320 360 Q500 375 680 330 Q860 285 1060 350 Q1180 380 1280 355 V480 H0 Z" fill="#28955f" opacity=".75"/>
+<!-- Water -->
+<rect y="440" width="1280" height="280" fill="url(#waterG)"/>
+<!-- Sun reflection on water -->
+<ellipse cx="920" cy="480" rx="60" ry="160" fill="#f5c842" opacity=".18"/>
+<!-- Water shimmer lines -->
+<g stroke="#7ecfc8" stroke-width="1.2" opacity=".22">
+  <line x1="200" y1="490" x2="500" y2="490"/><line x1="600" y1="510" x2="900" y2="510"/>
+  <line x1="100" y1="530" x2="450" y2="530"/><line x1="700" y1="550" x2="1050" y2="550"/>
+  <line x1="300" y1="575" x2="680" y2="575"/><line x1="800" y1="590" x2="1200" y2="590"/>
+  <line x1="150" y1="615" x2="550" y2="615"/><line x1="650" y1="635" x2="1100" y2="635"/>
+  <line x1="0" y1="660" x2="400" y2="660"/><line x1="900" y1="680" x2="1280" y2="680"/>
+</g>
+<!-- Left palm 1 -->
+<g transform="translate(42,180)">
+  <path d="M14 0 Q8 90 4 240" fill="none" stroke="#5a3a1a" stroke-width="8" stroke-linecap="round"/>
+  <g fill="#1a6040" opacity=".92">
+    <path d="M14 0 Q-36 -18 -72 4 Q-28 -4 14 10Z"/>
+    <path d="M14 0 Q64 -18 96 4 Q52 -4 14 10Z"/>
+    <path d="M14 0 Q-44 -50 -80 -52 Q-36 -18 8 12Z"/>
+    <path d="M14 0 Q68 -50 100 -52 Q58 -18 8 12Z"/>
+    <path d="M14 0 Q-4 -66 4 -90 Q10 -54 14 8Z"/>
+    <path d="M14 0 Q-28 -38 -52 -78 Q-16 -36 10 10Z"/>
+    <path d="M14 0 Q44 -38 68 -78 Q32 -36 14 10Z"/>
+  </g>
+</g>
+<!-- Left palm 2 -->
+<g transform="translate(0,240)">
+  <path d="M18 0 Q12 70 8 190" fill="none" stroke="#6b4820" stroke-width="6" stroke-linecap="round"/>
+  <g fill="#22724a" opacity=".85">
+    <path d="M18 0 Q-28 -14 -56 4 Q-22 -4 18 10Z"/>
+    <path d="M18 0 Q52 -14 78 4 Q44 -4 18 10Z"/>
+    <path d="M18 0 Q-36 -38 -64 -44 Q-28 -14 8 10Z"/>
+    <path d="M18 0 Q56 -38 82 -44 Q46 -14 18 10Z"/>
+    <path d="M18 0 Q0 -52 6 -72 Q12 -44 18 8Z"/>
+  </g>
+</g>
+<!-- Right palm -->
+<g transform="translate(1220,200) scale(-1,1)">
+  <path d="M14 0 Q8 80 4 220" fill="none" stroke="#5a3a1a" stroke-width="7" stroke-linecap="round"/>
+  <g fill="#1d6845" opacity=".9">
+    <path d="M14 0 Q-36 -18 -72 4 Q-28 -4 14 10Z"/>
+    <path d="M14 0 Q64 -18 96 4 Q52 -4 14 10Z"/>
+    <path d="M14 0 Q-44 -50 -80 -52 Q-36 -18 8 12Z"/>
+    <path d="M14 0 Q68 -50 100 -52 Q58 -18 8 12Z"/>
+    <path d="M14 0 Q-4 -66 4 -90 Q10 -54 14 8Z"/>
+  </g>
+</g>
+<!-- Houseboat (kettuvallam) -->
+<g transform="translate(330,430)">
+  <path d="M0 48 Q200 72 400 48 L374 78 Q200 96 26 78 Z" fill="#7a5230"/>
+  <path d="M28 46 Q200 -20 372 46 Q348 58 200 44 Q52 58 28 46Z" fill="#c8a56a"/>
+  <path d="M50 44 Q200 -8 350 44" fill="none" stroke="#9a7a48" stroke-width="3"/>
+  <path d="M80 40 Q200 4 320 40" fill="none" stroke="#9a7a48" stroke-width="2"/>
+  <rect x="80" y="14" width="44" height="24" rx="4" fill="#d4b87a" opacity=".7"/>
+  <rect x="178" y="10" width="44" height="28" rx="4" fill="#d4b87a" opacity=".8"/>
+  <rect x="276" y="14" width="44" height="24" rx="4" fill="#d4b87a" opacity=".7"/>
+</g>
+<!-- Small canoe -->
+<g transform="translate(750,490)">
+  <path d="M0 14 Q60 22 120 14 L110 22 Q60 28 10 22 Z" fill="#5a3a18"/>
+</g>
+<!-- Lotus flowers -->
+<g opacity=".9">
+  <g transform="translate(200,500)">
+    <circle cx="0" cy="0" r="6" fill="#f4b8c8"/>
+    <ellipse cx="-10" cy="-4" rx="8" ry="4" fill="#f9d0da" transform="rotate(-30)"/>
+    <ellipse cx="10" cy="-4" rx="8" ry="4" fill="#f9d0da" transform="rotate(30)"/>
+    <ellipse cx="0" cy="-12" rx="8" ry="4" fill="#f9d0da"/>
+    <ellipse cx="0" cy="4" rx="14" ry="4" fill="#3a9858" opacity=".7"/>
+  </g>
+  <g transform="translate(1080,530)">
+    <circle cx="0" cy="0" r="5" fill="#f4b8c8"/>
+    <ellipse cx="-8" cy="-3" rx="6" ry="3" fill="#f9d0da" transform="rotate(-30)"/>
+    <ellipse cx="8" cy="-3" rx="6" ry="3" fill="#f9d0da" transform="rotate(30)"/>
+    <ellipse cx="0" cy="-9" rx="6" ry="3" fill="#f9d0da"/>
+    <ellipse cx="0" cy="3" rx="11" ry="3" fill="#3a9858" opacity=".6"/>
+  </g>
+</g>
+</g>
+</svg>
+  <div class="land-overlay-bg"></div>
+  <div class="land-overlay">
+    <div class="land-left">
+      <img src="data:image/png;base64,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" alt="MaxEd"
+           style="height:56px;width:auto;display:block;margin-bottom:20px;">
+      <h1 class="land-h1">Kerala Fiscal Health<br><em>Dashboard</em></h1>
+    </div>
+    <div class="land-right">
+      <div class="nav-card" onclick="openSection('pg-snapshot')">
+        <div class="nc-icon"><i class="fas fa-gauge-high"></i></div>
+        <div class="nc-body"><div class="nc-title">Executive Snapshot</div>
+          <div class="nc-desc">Key numbers, deficit trend &amp; early warnings</div></div>
+        <span class="nc-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+      <div class="nav-card" onclick="openSection('pg-budget')">
+        <div class="nc-icon"><i class="fas fa-scale-balanced"></i></div>
+        <div class="nc-body"><div class="nc-title">Budget &amp; Deficits</div>
+          <div class="nc-desc">Fiscal gaps, debt vs FRBM, tax realisation</div></div>
+        <span class="nc-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+      <div class="nav-card" onclick="openSection('pg-cash')">
+        <div class="nc-icon"><i class="fas fa-building-columns"></i></div>
+        <div class="nc-body"><div class="nc-title">Cash &amp; Treasury</div>
+          <div class="nc-desc">Treasury balance, OMB, WMA days, arrears</div></div>
+        <span class="nc-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+      <div class="nav-card" onclick="openSection('pg-pse')">
+        <div class="nc-icon"><i class="fas fa-industry"></i></div>
+        <div class="nc-body"><div class="nc-title">Public Enterprises</div>
+          <div class="nc-desc">Losses, KSEBL, KSRTC &amp; Water Authority</div></div>
+        <span class="nc-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+      <div class="nav-card" onclick="openSection('pg-plan')">
+        <div class="nc-icon"><i class="fas fa-seedling"></i></div>
+        <div class="nc-body"><div class="nc-title">Plan &amp; Development</div>
+          <div class="nc-desc">Outlay vs spend, welfare delivery, SCSP &amp; TSP</div></div>
+        <span class="nc-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+      <div class="nav-card" onclick="openSection('pg-peer')">
+        <div class="nc-icon"><i class="fas fa-ranking-star"></i></div>
+        <div class="nc-body"><div class="nc-title">Peer Comparison</div>
+          <div class="nc-desc">Kerala vs peers across 21 fiscal metrics</div></div>
+        <span class="nc-arrow"><i class="fas fa-arrow-right"></i></span>
+      </div>
+    </div>
+  </div>
+  <div class="land-foot">
+    <span>Source: Kerala's Fiscal Health — A Status Report · Government of Kerala</span>
+    <span style="display:flex;align-items:center;gap:8px">
+      Powered by&nbsp;
+      <a href="https://maxed.in/" target="_blank"
+         style="color:#0e6b73;font-weight:800;font-family:'Fraunces';text-decoration:none">MaxEd</a>
+      &nbsp;·&nbsp;
+      <a href="tel:+919400556402" style="color:#0e6b73;text-decoration:none">+91 94005 56402</a>
+    </span>
+    <span>Data: 2015–16 to 2025–26</span>
+  </div>
+</div>
+
+
+<!-- ═══════ APP SHELL ═══════ -->
+<div id="app">
+<div class="app-inner">
+
+  <!-- Left sidebar (filter + navigation slicers like Camerry) -->
+  <div class="sidebar">
+    <div class="sb-brand" style="flex-direction:column;align-items:center;gap:8px;padding:16px 12px 12px;border-bottom:1px solid rgba(255,255,255,.1)">
+      
+      <span class="sb-name" style="font-size:.64rem;text-align:center;line-height:1.3">KERALA FISCAL HEALTH DASHBOARD<span class="ml" style="display:block;margin-top:2px">കേരള ധനസ്ഥിതി</span></span>
+    </div>
+
+    <!-- Slicer 1: Measure basis (like Camerry's AGE slicer) -->
+    <div class="sb-slicer">
+      <div class="sb-slicer-lbl">Measure Basis</div>
+      <select id="f_basis" class="sb-select" onchange="applyBasis()">
+        <option value="acc">Accounts (Actuals)</option>
+        <option value="be">Budget Estimate</option>
+      </select>
+    </div>
+
+
+    <!-- Section navigation list -->
+    <div class="sb-nav">
+      <div class="sb-nav-lbl">Sections</div>
+      <div class="sb-item active" data-pid="pg-snapshot" onclick="navigate('pg-snapshot',this)"><i class="fas fa-gauge-high"></i>Executive Snapshot</div>
+      <div class="sb-item" data-pid="pg-budget" onclick="navigate('pg-budget',this)"><i class="fas fa-scale-balanced"></i>Budget &amp; Deficits</div>
+      <div class="sb-item" data-pid="pg-cash" onclick="navigate('pg-cash',this)"><i class="fas fa-building-columns"></i>Cash &amp; Treasury</div>
+      <div class="sb-item" data-pid="pg-pse" onclick="navigate('pg-pse',this)"><i class="fas fa-industry"></i>Public Enterprises</div>
+      <div class="sb-item" data-pid="pg-plan" onclick="navigate('pg-plan',this)"><i class="fas fa-seedling"></i>Plan &amp; Development</div>
+      <div class="sb-item" data-pid="pg-peer" onclick="navigate('pg-peer',this)"><i class="fas fa-ranking-star"></i>Peer Comparison</div>
+    </div>
+
+    <div class="sb-foot">
+      <button class="sb-home-btn" onclick="goLanding()"><i class="fas fa-house"></i> Back to Home</button>
+      <div class="sb-foot-txt"><a href="https://maxed.in/" target="_blank" style="color:#ffe7bd;text-decoration:none;font-weight:800">MaxEd</a><br><a href="tel:+919400556402" style="color:#8fb0ad;text-decoration:none">+91 94005 56402</a></div>
+    </div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main-content">
+    <!-- Header band -->
+    <div class="page-header">
+      <div class="hdr-left">
+        
+        <div>
+          <div class="hdr-title" id="hdrTitle">Executive Snapshot</div>
+          <div class="hdr-ml" id="hdrMl">ഒരു നോട്ടത്തിൽ</div>
+        </div>
+      </div>
+      <button class="kpi-guide-btn" onclick="toggleKpiPanel()"><i class="fas fa-chart-bar"></i> KPI Guide</button>
+      <button class="abv-btn" onclick="toggleAbv()"><i class="fas fa-book-open"></i> Acronyms</button>
+    </div>
+    <!-- Kasavu gold accent line -->
+    <div class="kasavu-line"></div>
+
+    <!-- Canvas with Kerala pattern background -->
+    <div class="canvas">
+      <!-- Faint palm watermark -->
+      <svg class="canvas-art" viewBox="0 0 180 260" fill="none">
+        <path d="M90 10 Q84 90 80 260" stroke="#1a6040" stroke-width="10" stroke-linecap="round"/>
+        <path d="M90 10 Q20 -8 -20 20 Q40 4 90 24Z" fill="#1a6040"/>
+        <path d="M90 10 Q160 -8 200 20 Q140 4 90 24Z" fill="#1a6040"/>
+        <path d="M90 10 Q-10 -50 -40 -56 Q28 -14 84 28Z" fill="#1a6040"/>
+        <path d="M90 10 Q190 -50 220 -56 Q152 -14 90 28Z" fill="#1a6040"/>
+        <path d="M90 10 Q70 -70 76 -100 Q88 -60 90 16Z" fill="#1a6040"/>
+        <path d="M90 10 Q30 -44 4 -96 Q48 -40 90 28Z" fill="#1a6040"/>
+        <path d="M90 10 Q150 -44 176 -96 Q132 -40 90 28Z" fill="#1a6040"/>
+      </svg>
+
+<div id="pg-snapshot" class="page-section active">
+      <div class="kpi-row">
+        <div class="kpi-card teal"><div class="kpi-label">Total Outstanding Debt</div><div class="kpi-val">₹5.07L cr</div><div class="kpi-sub">35.5% of GSDP incl. KIIFB · <span class="up">above target</span></div></div>
+        <div class="kpi-card gold"><div class="kpi-label">Fiscal Deficit (2025-26)</div><div class="kpi-val">3.78%</div><div class="kpi-sub">of GSDP · target ≈ 3.0%</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Days on RBI Support (2025)</div><div class="kpi-val">262</div><div class="kpi-sub"><span class="up">worst on record</span></div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Inherited Arrears</div><div class="kpi-val">₹48,733 cr</div><div class="kpi-sub">unpaid bills handed to new govt on day one</div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-8">
+          <div class="widget">
+            <div class="widget-header"><span class="widget-title">Deficit &amp; Debt Trend</span>
+<div class="widget-subtitle">Every year Kerala spends more than it earns — this chart shows how big that gap is, as a share of the State's total economy. The dotted line is the legal limit Kerala promised to stay under. Every time the red line crosses above it, that promise was broken.</div>
+              <div class="toggle-group" id="tg_snap">
+                <button class="toggle-btn active" onclick="setSnapMetric('fiscal',this)">Fiscal Deficit</button>
+                <button class="toggle-btn" onclick="setSnapMetric('revenue',this)">Revenue Deficit</button>
+                <button class="toggle-btn" onclick="setSnapMetric('debt',this)">Debt</button>
+              </div>
+            </div>
+            <div class="chart-container"><canvas id="c_snap"></canvas></div>
+            <div class="inference-box"><b>Executive Summary</b><span id="inf_snap">Realised deficits have stayed above the State's FRBM targets across the decade, with borrowing rising to fund the gap.</span></div>
+          </div>
+        </div>
+        <div class="col-lg-4">
+          <div class="widget">
+            <div class="widget-header"><span class="widget-title warn"><i class="fas fa-triangle-exclamation me-1"></i>Early Warning Signals</span></div>
+            <div class="alert-scroll" id="alerts"></div>
+          </div>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-6"><div class="widget"><div class="widget-header"><span class="widget-title">Treasury Balance vs Borrowing</span>
+<div class="widget-subtitle">The bars show how much cash was left in Kerala's treasury at the end of each year. The orange line shows how much new money was borrowed that same year. When borrowing keeps rising but the cash balance stays flat, it means every rupee borrowed was spent before the year ended — nothing was saved.</div></div><div class="chart-container"><canvas id="c_treasury"></canvas></div></div></div>
+        <div class="col-lg-6"><div class="widget"><div class="widget-header"><span class="widget-title">Own Tax Revenue: Budgeted vs Realised</span>
+<div class="widget-subtitle">At the start of each year Kerala sets a tax collection target (light bars). The dark bars show what was actually collected. The orange line tracks how close the State got — 100% means it hit the target exactly. Every year below 100% means a shortfall that had to be covered by borrowing.</div></div><div class="chart-container"><canvas id="c_owntax"></canvas></div></div></div>
+      </div>
+
+<div class="glossary-strip">
+  <div class="glossary-strip-title"><i class="fas fa-circle-info"></i> Quick Reference</div>
+  <div class="glossary-terms">
+    <span class="gterm"><b>GSDP</b> = Total size of Kerala's economy in a year</span>
+    <span class="gterm"><b>Fiscal Deficit</b> = Total gap between all spending and all income</span>
+    <span class="gterm"><b>Revenue Deficit</b> = Gap from day-to-day running costs alone (salaries, pensions)</span>
+    <span class="gterm"><b>FRBM</b> = Fiscal Responsibility law that caps how much Kerala can borrow</span>
+    <span class="gterm"><b>Crore</b> = 10 million rupees · <b>Lakh crore</b> = 1 trillion rupees</span>
+  </div>
+</div>
+    </div>
+
+    <!-- ===== PAGE 2: BUDGET ===== -->
+    <div id="pg-budget" class="page-section">
+      <div class="kpi-row">
+        <div class="kpi-card teal"><div class="kpi-label">Day-to-Day Loss (2025-26)</div><div class="kpi-val">2.58%</div><div class="kpi-sub">of economy · target = zero</div></div>
+        <div class="kpi-card gold"><div class="kpi-label">Debt / GSDP (2025-26)</div><div class="kpi-val">35.5%</div><div class="kpi-sub"><span class="up">incl. KIIFB · above 32% ceiling</span></div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Tax Collection Rate</div><div class="kpi-val">92%</div><div class="kpi-sub">₹8 short for every ₹100 targeted (2025-26)</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Central Transfer Shortfall</div><div class="kpi-val">₹20,500 cr</div><div class="kpi-sub">2026-27 assumption gap</div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-7"><div class="widget"><div class="widget-header"><span class="widget-title">Revenue &amp; Fiscal Deficit vs Target</span>
+<div class="widget-subtitle">Think of two kinds of loss: the 'day-to-day loss' (revenue deficit) is the gap just from routine running costs like salaries and pensions. The 'total loss' (fiscal deficit) adds in all other spending too. Both have legal limits shown as dotted lines — crossing above means Kerala spent beyond what the law allows.</div></div><div class="chart-container"><canvas id="c_def"></canvas></div></div></div>
+        <div class="col-lg-5"><div class="widget"><div class="widget-header"><span class="widget-title">Debt vs FRBM Ceiling</span>
+<div class="widget-subtitle">This shows Kerala's total debt pile compared to the size of its economy. The dotted red line is the legal ceiling Kerala agreed to — if the debt line rises above it, Kerala has borrowed more than it legally should. As you can see, it has stayed above the limit for most of the decade.</div></div><div class="chart-container"><canvas id="c_debt"></canvas></div></div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-4"><div class="widget"><div class="widget-header"><span class="widget-title">Own Tax Revenue</span>
+<div class="widget-subtitle">Light bars are Kerala's own tax targets; dark bars are what was actually collected. Every gap between them is money Kerala expected but never received — and had to borrow instead to keep the government running.</div></div><div class="chart-container"><canvas id="c_owntax2"></canvas></div></div></div>
+        <div class="col-lg-4"><div class="widget"><div class="widget-header"><span class="widget-title">Expenditure: Budget vs Actuals</span>
+<div class="widget-subtitle">Kerala consistently spends more on day-to-day running costs (salaries, pensions) than planned, while spending less than planned on building new infrastructure and assets. In plain terms: more money going out on routine bills, less money going into the future.</div></div><div class="chart-container"><canvas id="c_exp"></canvas></div></div></div>
+        <div class="col-lg-4"><div class="widget"><div class="widget-header"><span class="widget-title">Central Transfers 2026-27</span>
+<div class="widget-subtitle">Every year Kerala assumes it will receive a certain amount of money from the Central Government. The lighter bar is the assumption; the darker bar is what was actually received. The gap is money Kerala counted on but never got — forcing it to borrow to fill the hole.</div></div><div class="chart-container"><canvas id="c_transfers"></canvas></div></div></div>
+      </div>
+
+<div class="glossary-strip">
+  <div class="glossary-strip-title"><i class="fas fa-circle-info"></i> Quick Reference</div>
+  <div class="glossary-terms">
+    <span class="gterm"><b>GSDP</b> = Total size of Kerala's economy in a year</span>
+    <span class="gterm"><b>Fiscal Deficit</b> = Total gap between all spending and all income</span>
+    <span class="gterm"><b>Revenue Deficit</b> = Gap from day-to-day running costs alone (salaries, pensions)</span>
+    <span class="gterm"><b>FRBM</b> = Fiscal Responsibility law that caps how much Kerala can borrow</span>
+    <span class="gterm"><b>Crore</b> = 10 million rupees · <b>Lakh crore</b> = 1 trillion rupees</span>
+  </div>
+</div>
+    </div>
+
+    <!-- ===== PAGE 3: CASH ===== -->
+    <div id="pg-cash" class="page-section">
+      <div class="kpi-row">
+        <div class="kpi-card red"><div class="kpi-label">Days on RBI Support (2025)</div><div class="kpi-val">262</div><div class="kpi-sub"><span class="up">+137 vs 2024</span></div></div>
+        <div class="kpi-card teal"><div class="kpi-label">Closing Balance (2025-26)</div><div class="kpi-val">₹6,322 cr</div><div class="kpi-sub">year-end cash</div></div>
+        <div class="kpi-card gold"><div class="kpi-label">Peak Market Borrowing</div><div class="kpi-val">₹53,666 cr</div><div class="kpi-sub">bonds sold to banks & investors (2024-25)</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Inherited Arrears</div><div class="kpi-val">₹48,733 cr</div><div class="kpi-sub">as on 31 Mar 2026</div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-8"><div class="widget"><div class="widget-header"><span class="widget-title">Treasury Balance vs Open Market Borrowing</span>
+<div class="widget-subtitle">The bars show how much cash Kerala had left at year end. The orange line shows how much Kerala borrowed by selling bonds that year. When the orange line climbs steeply while the bars stay flat, it means Kerala is borrowing more and more — but spending every rupee immediately, keeping nothing in reserve.</div></div><div class="chart-container"><canvas id="c_treasury2"></canvas></div><div class="inference-box"><b>Cash Stress</b>A positive year-end balance often reflects a late surge in March borrowing rather than underlying strength.</div></div></div>
+        <div class="col-lg-4"><div class="widget"><div class="widget-header"><span class="widget-title warn"><i class="fas fa-triangle-exclamation me-1"></i>Liquidity Alerts</span></div><div class="alert-scroll" id="alerts_cash"></div></div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-7"><div class="widget"><div class="widget-header"><span class="widget-title">Days in WMA &amp; Overdraft (2011–2026)</span>
+<div class="widget-subtitle">On some days Kerala's treasury runs completely empty. On those days the State borrows emergency funds from the Reserve Bank of India just to pay salaries and bills. Yellow bars show days of emergency borrowing (called WMA); red bars show days when even that limit was crossed and Kerala went into overdraft. In 2025, this happened on 262 out of 365 days.</div></div><div class="chart-container"><canvas id="c_wma"></canvas></div></div></div>
+        <div class="col-lg-5"><div class="widget"><div class="widget-header"><span class="widget-title">Inherited Arrears by Category</span>
+<div class="widget-subtitle">These are bills Kerala has not yet paid — salary allowances owed to government staff, pension relief owed to retirees, payments owed to contractors, and welfare scheme dues. Each bar shows one category. The new government inherited all of this as unpaid debt on day one — totalling ₹48,733 crore.</div></div><div class="chart-container"><canvas id="c_arrears"></canvas></div></div></div>
+      </div>
+
+<div class="glossary-strip">
+  <div class="glossary-strip-title"><i class="fas fa-circle-info"></i> Quick Reference</div>
+  <div class="glossary-terms">
+    <span class="gterm"><b>WMA (Ways &amp; Means Advance)</b> = Short-term emergency loan from RBI when treasury runs empty</span>
+    <span class="gterm"><b>Overdraft (OD)</b> = Borrowing beyond even the emergency WMA limit — the last resort</span>
+    <span class="gterm"><b>OMB (Open Market Borrowing)</b> = Bonds Kerala sells to banks and investors to raise money</span>
+    <span class="gterm"><b>Arrears</b> = Bills that are due and overdue but not yet paid</span>
+    <span class="gterm"><b>Treasury</b> = The government's bank account where all income and spending flows</span>
+  </div>
+</div>
+    </div>
+
+    <!-- ===== PAGE 4: PSE ===== -->
+    <div id="pg-pse" class="page-section">
+      <div class="kpi-row">
+        <div class="kpi-card red"><div class="kpi-label">Accumulated PSE Loss</div><div class="kpi-val">₹78,851 cr</div><div class="kpi-sub"><span class="up">2024-25</span></div></div>
+        <div class="kpi-card teal"><div class="kpi-label">Govt. Money in PSEs</div><div class="kpi-val">₹44,846 cr</div><div class="kpi-sub">invested in state companies (2024-25)</div></div>
+        <div class="kpi-card gold"><div class="kpi-label">Returns to Govt</div><div class="kpi-val">₹249 cr</div><div class="kpi-sub">dividend/profit 2024-25</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Loan Arrears to State</div><div class="kpi-val">₹25,182 cr</div><div class="kpi-sub">KSRTC, KWA, KSEB lead</div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-7"><div class="widget"><div class="widget-header"><span class="widget-title">Accumulated Losses of All PSEs</span>
+<div class="widget-subtitle">Kerala owns dozens of companies — buses (KSRTC), electricity (KSEB), water, construction and more. This chart shows the total losses these companies have accumulated over the years that were never recovered. It is not last year's loss alone — it is the entire mountain of losses built up over time — growing from ₹31,571 crore in 2021-22 to ₹78,851 crore in 2024-25.</div></div><div class="chart-container"><canvas id="c_pseloss"></canvas></div><div class="inference-box"><b>Drain on Budget</b>Combined losses grew from ₹31,571 cr (2021-22) to ₹78,851 cr (2024-25) in just four years, while the State keeps funding these enterprises.</div></div></div>
+        <div class="col-lg-5"><div class="widget"><div class="widget-header"><span class="widget-title">Support Given vs Returns Received</span>
+<div class="widget-subtitle">The tall bars show money Kerala puts into its State-owned companies every year — subsidies, loans and budget support. The short bars show what comes back as profit or dividend. The huge gap between them is taxpayer money that goes in and never comes back.</div></div><div class="chart-container"><canvas id="c_psebudget"></canvas></div></div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-6"><div class="widget"><div class="widget-header"><span class="widget-title">KSEBL: Revenue, Expenditure &amp; Profit</span>
+<div class="widget-subtitle">Blue bars = total income of Kerala's electricity company (KSEB). Red bars = total costs. The line shows the difference — above zero is profit, below zero is loss. When the line dips below the centre, KSEB spent more than it earned that year.</div></div><div class="chart-container"><canvas id="c_ksebl"></canvas></div></div></div>
+        <div class="col-lg-6"><div class="widget"><div class="widget-header"><span class="widget-title">KSRTC vs Water Authority: Net Worth</span>
+<div class="widget-subtitle">Net worth = what a company owns minus what it owes. When net worth falls below zero (below the centre line) it means the company's debts are bigger than everything it owns — technically bankrupt. Kerala's bus corporation (KSRTC) has been in this condition every year shown here.</div></div><div class="chart-container"><canvas id="c_ksrtc"></canvas></div></div></div>
+      </div>
+
+<div class="glossary-strip">
+  <div class="glossary-strip-title"><i class="fas fa-circle-info"></i> Quick Reference</div>
+  <div class="glossary-terms">
+    <span class="gterm"><b>PSE / SLPE</b> = State-owned company (e.g. KSRTC buses, KSEB electricity, KWA water)</span>
+    <span class="gterm"><b>Accumulated loss</b> = Total of all past losses never recovered — not just this year's loss</span>
+    <span class="gterm"><b>Net worth</b> = What a company owns minus what it owes — negative means technically bankrupt</span>
+    <span class="gterm"><b>Budgetary support</b> = Taxpayer money given to state companies to keep them running</span>
+    <span class="gterm"><b>KIIFB</b> = Kerala Infrastructure Investment Fund — borrows separately outside the main budget</span>
+  </div>
+</div>
+    </div>
+
+    <!-- ===== PAGE 5: PLAN ===== -->
+    <div id="pg-plan" class="page-section">
+      <div class="kpi-row">
+        <div class="kpi-card teal"><div class="kpi-label">Development Share of Budget</div><div class="kpi-val">17.6%</div><div class="kpi-sub"><span class="up">only ₹17.60 of every ₹100 spent goes to development</span></div></div>
+        <div class="kpi-card gold"><div class="kpi-label">Development Spending (2024-25)</div><div class="kpi-val">₹41,288 cr</div><div class="kpi-sub">₹36 extra spent per every ₹100 planned</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">SC/ST/OBC Welfare Share</div><div class="kpi-val">3.85%</div><div class="kpi-sub">of development budget (2025-26) — declining</div></div>
+        <div class="kpi-card green"><div class="kpi-label">SC Welfare Funds Used</div><div class="kpi-val">83.5%</div><div class="kpi-sub">of reserved SC welfare budget spent (2024-25)</div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-7"><div class="widget"><div class="widget-header"><span class="widget-title">Plan Outlay vs Expenditure</span>
+<div class="widget-subtitle">Light bars = the development budget officially approved at the start of the year. Dark bars = what was actually spent. When dark exceeds light, Kerala spent more than it planned — often because Central Government scheme costs and old pending bills had to be cleared.</div></div><div class="chart-container"><canvas id="c_planout"></canvas></div></div></div>
+        <div class="col-lg-5"><div class="widget"><div class="widget-header"><span class="widget-title">Composition by Service Category</span>
+<div class="widget-subtitle">Of every ₹100 Kerala spends on development, this chart shows how much goes to health and education, how much to roads and infrastructure, how much to government administration, and how much just to repaying old loans. Watch how the slices change year by year.</div></div><div class="chart-container"><canvas id="c_plancomp"></canvas></div></div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-6"><div class="widget"><div class="widget-header"><span class="widget-title">Plan Share of Total Spending</span>
+<div class="widget-subtitle">This line shows what share of Kerala's total spending actually goes toward new development — building things, running schemes. A falling line means salaries, pensions and interest payments are eating up more and more of the budget, leaving less and less for actual development work.</div></div><div class="chart-container"><canvas id="c_planshare"></canvas></div><div class="inference-box"><b>Shrinking Space</b>As salaries, pensions and interest claim more of the budget, the slice left for development has fallen to its lowest in the decade.</div></div></div>
+        <div class="col-lg-6"><div class="widget"><div class="widget-header"><span class="widget-title">SCSP &amp; TSP Delivery (% of Outlay)</span>
+<div class="widget-subtitle">By law, a fixed portion of Kerala's development budget must be spent on welfare of Scheduled Caste (SC) and Scheduled Tribe (ST) communities. This chart shows how much of that reserved money was actually spent. 100% means fully delivered; below 100% means welfare money that was reserved but went unspent.</div></div><div class="chart-container"><canvas id="c_scsp"></canvas></div></div></div>
+      </div>
+
+<div class="glossary-strip">
+  <div class="glossary-strip-title"><i class="fas fa-circle-info"></i> Quick Reference</div>
+  <div class="glossary-terms">
+    <span class="gterm"><b>Plan / Development spending</b> = Money for new projects — roads, buildings, schemes</span>
+    <span class="gterm"><b>SCSP</b> = Scheduled Caste Sub-Plan — budget ring-fenced by law for SC community welfare</span>
+    <span class="gterm"><b>TSP</b> = Tribal Sub-Plan — budget ring-fenced by law for ST community welfare</span>
+    <span class="gterm"><b>Outlay</b> = The approved development budget at the start of the year</span>
+    <span class="gterm"><b>CSS</b> = Centrally Sponsored Schemes — projects funded jointly by Centre and State</span>
+  </div>
+</div>
+    </div>
+
+    <!-- ===== PAGE 6: PEER ===== -->
+    <div id="pg-peer" class="page-section">
+      <div class="kpi-row">
+        <div class="kpi-card teal"><div class="kpi-label">Total Income (% of Economy)</div><div class="kpi-val">10.7%</div><div class="kpi-sub">vs 14.4% all-states avg — Kerala earns less</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Fiscal Deficit / GSDP</div><div class="kpi-val">3.78%</div><div class="kpi-sub"><span class="up">vs 3.3% all-states</span></div></div>
+        <div class="kpi-card gold"><div class="kpi-label">Outstanding Liabilities</div><div class="kpi-val">35.5%</div><div class="kpi-sub">incl. KIIFB · among the highest</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Own Tax / GSDP</div><div class="kpi-val">6.4%</div><div class="kpi-sub">slipping vs peers</div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-12"><div class="widget"><div class="widget-header"><span class="widget-title">Kerala vs Peer States</span>
+<div class="widget-subtitle">Pick any fiscal indicator from the dropdown above and this chart instantly compares Kerala (red line) against three yardsticks: 8 similar-sized states (teal), all major states (blue), and the national average (gold). If Kerala's red line is above the others, it means Kerala is doing worse on that measure.</div>
+          <select id="peerMetric" class="form-select form-select-sm" style="max-width:280px" onchange="renderPeer()"></select></div>
+          <div class="chart-container"><canvas id="c_peer"></canvas></div>
+          <div class="state-groups-panel">
+            <div class="sg-title"><i class="fas fa-info-circle"></i>&nbsp; Benchmark Groups — States Included</div>
+            <div class="sg-row">
+              <div class="sg-label"><div class="sg-dot red"></div><div class="sg-lbl-text">Kerala</div></div>
+              <div class="sg-states">The State being measured against all benchmarks below.</div>
+            </div>
+            <div class="sg-row">
+              <div class="sg-label"><div class="sg-dot teal"></div><div class="sg-lbl-text">8 Comparable States</div></div>
+              <div class="sg-states">
+                <span>Andhra Pradesh</span><span>Gujarat</span><span>Karnataka</span>
+                <span>Maharashtra</span><span>Punjab</span><span>Rajasthan</span>
+                <span>Tamil Nadu</span><span>West Bengal</span>
+              </div>
+            </div>
+            <div class="sg-row">
+              <div class="sg-label"><div class="sg-dot blue"></div><div class="sg-lbl-text">18 Major States</div></div>
+              <div class="sg-states">
+                <span>Andhra Pradesh</span><span>Bihar</span><span>Chhattisgarh</span>
+                <span>Gujarat</span><span>Haryana</span><span>Himachal Pradesh</span>
+                <span>Jharkhand</span><span>Karnataka</span><span>Kerala</span>
+                <span>Madhya Pradesh</span><span>Maharashtra</span><span>Odisha</span>
+                <span>Punjab</span><span>Rajasthan</span><span>Tamil Nadu</span>
+                <span>Telangana</span><span>Uttar Pradesh</span><span>West Bengal</span>
+              </div>
+            </div>
+            <div class="sg-row">
+              <div class="sg-label"><div class="sg-dot gold"></div><div class="sg-lbl-text">All States</div></div>
+              <div class="sg-states">National average of all 28 States and Union Territories with legislature
+                — includes <span>Andhra Pradesh</span><span>Arunachal Pradesh</span><span>Assam</span>
+                <span>Bihar</span><span>Chhattisgarh</span><span>Goa</span><span>Gujarat</span>
+                <span>Haryana</span><span>Himachal Pradesh</span><span>Jharkhand</span>
+                <span>Karnataka</span><span>Kerala</span><span>Madhya Pradesh</span>
+                <span>Maharashtra</span><span>Manipur</span><span>Meghalaya</span>
+                <span>Mizoram</span><span>Nagaland</span><span>Odisha</span>
+                <span>Punjab</span><span>Rajasthan</span><span>Sikkim</span>
+                <span>Tamil Nadu</span><span>Telangana</span><span>Tripura</span>
+                <span>Uttar Pradesh</span><span>Uttarakhand</span><span>West Bengal</span>
+                + Delhi &amp; Puducherry
+              </div>
+            </div>
+          </div>
+          <div class="inference-box"><b>Benchmark</b><span id="inf_peer">Compare Kerala (red) against the comparable-states, major-states and all-states averages. Select any indicator above.</span></div>
+        </div></div>
+      </div>
+      <div class="row g-4">
+        <div class="col-lg-6"><div class="widget"><div class="widget-header"><span class="widget-title">Fiscal Deficit: Union vs Kerala vs States</span>
+<div class="widget-subtitle">This compares the total spending gap — as a share of the economy — for the Central Government, Kerala, and the average of all states. When Kerala's line rises above the others, it means Kerala is running a bigger deficit than both the Centre and other states combined.</div></div><div class="chart-container"><canvas id="c_c3"></canvas></div></div></div>
+        <div class="col-lg-6"><div class="widget"><div class="widget-header"><span class="widget-title">Outstanding Liabilities vs Peers</span>
+<div class="widget-subtitle">Shows Kerala's total debt pile as a share of its economy, compared to similar states and the national average. A line above the others means Kerala carries a heavier debt burden. Note: The KPI card shows 35.5% which includes Kerala Infrastructure Investment Fund (KIIFB) off-budget borrowings of ₹56,000 crore. The chart line (33.2%) uses only officially recorded on-budget liabilities.</div></div><div class="chart-container"><canvas id="c_liab"></canvas></div></div></div>
+      </div>
+
+<div class="glossary-strip">
+  <div class="glossary-strip-title"><i class="fas fa-circle-info"></i> Quick Reference</div>
+  <div class="glossary-terms">
+    <span class="gterm"><b>Comparable states</b> = 8 states similar to Kerala in size &amp; income used as a fair benchmark</span>
+    <span class="gterm"><b>Major states</b> = 18 large states by population used as a broader benchmark</span>
+    <span class="gterm"><b>All states avg</b> = National average across all 28 states + UTs with legislature</span>
+    <span class="gterm"><b>Outstanding liabilities</b> = Total debt pile including all borrowings</span>
+    <span class="gterm"><b>KIIFB</b> = Kerala Infrastructure Investment Fund borrowings — off-budget but real debt</span>
+  </div>
+</div>
+    
+    </div>
+  </div>
+</div>
+</div>
+
+<div id="kpi-backdrop" onclick="toggleKpiPanel()"></div>
+<div id="kpi-panel">
+  <div class="kpi-guide-kasavu"></div>
+  <div class="kpi-panel-head">
+    <div>
+      <div class="kpi-panel-title"><i class="fas fa-chart-bar"></i> KPI Guide</div>
+      <div class="kpi-panel-sub" id="kpi-panel-page">Executive Snapshot</div>
+    </div>
+    <button class="kpi-panel-close" onclick="toggleKpiPanel()"><i class="fas fa-xmark"></i></button>
+  </div>
+  <div class="kpi-panel-body" id="kpi-panel-body"></div>
+</div>
+
+<!-- Backdrop -->
+<div class="abv-backdrop" id="abvBackdrop" onclick="toggleAbv()"></div>
+
+<!-- Acronyms slide-in panel -->
+<div class="abv-panel" id="abvPanel">
+  <div class="abv-kasavu"></div>
+  <div class="abv-head">
+    <div>
+      <div class="abv-head-title"><i class="fas fa-book-open"></i> Acronyms &amp; Abbreviations</div>
+      <div class="abv-head-sub" id="abvPageName">Executive Snapshot</div>
+    </div>
+    <button class="abv-close" onclick="toggleAbv()"><i class="fas fa-xmark"></i></button>
+  </div>
+  <div class="abv-body" id="abvBody"></div>
+</div>
+
+
+<script>
+const APP={"years": ["2015-16", "2016-17", "2017-18", "2018-19", "2019-20", "2020-21", "2021-22", "2022-23", "2023-24", "2024-25", "2025-26"], "series": {"Table A.1:": {"kerala": [12.28, 11.91, 11.83, 11.78, 11.1, 12.65, 12.62, 12.78, 10.96, 10.65, 10.68], "eight": [11.37, 11.16, 11.2, 11.47, 10.84, 10.77, 11.08, 11.21, 10.62, 10.82, 10.96], "major": [13.46, 13.36, 13.51, 13.79, 13.16, 12.8, 13.46, 13.39, 12.87, 13.67, 13.9], "all": [13.31, 13.3, 13.58, 13.86, 13.28, 13.03, 13.67, 13.59, 13.05, 14.14, 14.36]}, "Table A.2:": {"kerala": [68.69, 68.61, 71.5, 67.64, 69.37, 56.33, 58.99, 65.61, 72.84, 74.88, 72.63], "eight": [65.44, 64.54, 68.02, 65.4, 64.74, 61.52, 65.38, 65.98, 69.45, 70.11, 70.31], "major": [55.58, 53.87, 57.11, 55.41, 56.38, 52.99, 54.59, 56.79, 58.58, 57.66, 58.91], "all": [54.6, 52.9, 56.44, 54.71, 55.61, 52.1, 53.31, 55.93, 57.82, 56.88, 58.17]}, "Table A.3:": {"kerala": [8.44, 8.17, 8.46, 7.97, 7.7, 7.13, 7.44, 8.38, 7.99, 7.97, 7.75], "eight": [7.44, 7.2, 7.62, 7.5, 7.02, 6.63, 7.24, 7.39, 7.37, 7.59, 7.71], "major": [7.48, 7.2, 7.72, 7.64, 7.42, 6.78, 7.35, 7.6, 7.54, 7.88, 8.19], "all": [7.27, 7.03, 7.67, 7.59, 7.39, 6.79, 7.29, 7.6, 7.54, 8.04, 8.36]}, "Table A.4:": {"kerala": [9.2, 9.04, 9.02, 8.84, 8.21, 7.67, 8.24, 8.69, 8.46, 8.58, 8.42], "eight": [8.82, 8.8, 8.98, 9.1, 8.31, 7.76, 8.57, 8.74, 8.81, 9.03, 9.06], "major": [10.06, 10.05, 10.22, 10.43, 9.35, 8.9, 9.97, 10.07, 10.21, 10.64, 10.88], "all": [9.83, 9.88, 10.16, 10.38, 9.33, 8.9, 9.98, 10.08, 10.23, 10.87, 11.12]}, "Table A.5:": {"kerala": [6.94, 6.64, 6.86, 6.47, 6.19, 6.18, 6.31, 6.93, 6.55, 6.54, 6.41], "eight": [6.59, 6.41, 6.84, 6.71, 6.34, 6.02, 6.4, 6.7, 6.62, 6.81, 6.84], "major": [6.35, 6.09, 6.67, 6.48, 6.12, 5.92, 6.25, 6.56, 6.48, 6.77, 7.0], "all": [6.15, 5.93, 6.61, 6.43, 6.09, 5.9, 6.24, 6.55, 6.48, 6.89, 7.14]}, "Table A.6:": {"kerala": [6.37, 6.12, 6.32, 5.96, 5.68, 5.64, 5.72, 6.24, 5.96, 5.93, 5.82], "eight": [5.7, 5.63, 6.01, 5.86, 5.52, 5.25, 5.52, 5.76, 5.69, 5.83, 5.83], "major": [5.52, 5.37, 5.9, 5.71, 5.36, 5.17, 5.41, 5.68, 5.6, 5.85, 6.04], "all": [5.35, 5.24, 5.86, 5.66, 5.34, 5.16, 5.41, 5.68, 5.61, 5.97, 6.16]}, "Table A.7:": {"kerala": [0.57, 0.52, 1.95, 2.71, 2.52, 2.6, 2.61, 2.84, 2.69, 2.69, 2.65], "eight": [0.83, 0.72, 2.02, 2.79, 2.57, 2.36, 2.19, 2.73, 2.8, 2.9, 2.92], "major": [0.79, 0.68, 2.07, 2.74, 2.51, 2.32, 2.42, 2.68, 2.77, 2.96, 3.09], "all": [0.76, 0.66, 2.07, 2.73, 2.51, 2.33, 2.55, 2.7, 2.79, 3.04, 3.17]}, "Table A.9:": {"kerala": [2.26, 2.4, 2.16, 2.37, 2.02, 1.5, 1.93, 1.76, 1.92, 2.05, 2.01], "eight": [2.23, 2.39, 2.14, 2.39, 1.97, 1.74, 1.92, 2.03, 2.18, 2.22, 2.22], "major": [3.71, 3.96, 3.55, 3.95, 3.23, 2.98, 3.65, 3.51, 3.73, 3.88, 3.88], "all": [3.68, 3.95, 3.54, 3.95, 3.24, 3.0, 3.74, 3.53, 3.75, 3.98, 3.98]}, "Table A.10:": {"kerala": [3.09, 2.87, 2.81, 2.94, 2.89, 4.98, 4.38, 4.09, 2.5, 2.06, 2.26], "eight": [2.55, 2.37, 2.21, 2.37, 2.53, 3.01, 2.19, 2.47, 1.81, 1.79, 1.9], "major": [3.4, 3.31, 3.3, 3.36, 3.81, 3.9, 3.4, 3.31, 2.66, 3.03, 3.02], "all": [3.48, 3.42, 3.43, 3.48, 3.96, 4.13, 3.68, 3.51, 2.82, 3.27, 3.24]}, "Table B.1:": {"kerala": [90.41, 88.98, 90.67, 91.88, 91.55, 88.88, 89.56, 89.42, 89.42, 90.69, 90.38], "eight": [85.99, 81.19, 86.03, 85.62, 86.33, 87.69, 86.69, 86.67, 85.7, 86.03, 85.61], "major": [81.18, 80.28, 84.47, 84.41, 85.86, 86.73, 85.35, 84.77, 83.3, 82.87, 82.14], "all": [81.27, 80.36, 84.43, 84.42, 85.85, 86.62, 85.27, 84.71, 83.29, 82.76, 82.01]}, "Table B.2:": {"kerala": [1.48, 1.78, 1.47, 1.24, 1.19, 2.0, 1.84, 1.62, 1.49, 1.33, 1.34], "eight": [1.98, 2.83, 1.95, 2.04, 1.93, 1.86, 1.93, 1.87, 1.96, 1.98, 2.04], "major": [3.13, 3.36, 2.52, 2.57, 2.27, 2.26, 2.39, 2.46, 2.65, 2.96, 3.09], "all": [3.08, 3.31, 2.52, 2.58, 2.29, 2.3, 2.44, 2.49, 2.68, 3.07, 3.2]}, "Table B.3:": {"kerala": [14.0, 14.35, 14.25, 13.99, 12.88, 16.0, 15.81, 13.67, 12.56, 12.99, 12.58], "eight": [12.17, 12.22, 11.98, 12.16, 12.18, 13.25, 12.55, 12.14, 11.75, 12.2, 12.13], "major": [13.52, 13.67, 13.69, 13.91, 13.8, 14.74, 13.95, 13.68, 13.23, 14.31, 14.19], "all": [13.35, 13.56, 13.69, 13.96, 13.89, 14.9, 14.1, 13.82, 13.36, 14.73, 14.59]}, "Table B.6:": {"kerala": [16.09, 16.02, 18.21, 18.04, 21.3, 21.49, 19.98, 18.97, 21.68, 22.37, 20.89], "eight": [14.28, 14.82, 15.85, 15.13, 16.55, 18.51, 16.75, 14.38, 16.66, 15.9, 15.96], "major": [11.76, 12.38, 12.8, 12.33, 13.33, 15.23, 13.45, 12.39, 13.08, 12.45, 12.36], "all": [11.69, 12.28, 12.63, 12.18, 13.16, 14.96, 13.25, 12.55, 12.9, 12.25, 12.18]}, "Table B.7:": {"kerala": [14.12, 13.3, 15.13, 15.18, 18.35, 16.99, 15.94, 17.74, 18.92, 18.34, 17.73], "eight": [13.33, 13.54, 14.81, 14.26, 14.72, 15.05, 14.78, 13.27, 15.06, 14.11, 14.42], "major": [11.7, 12.09, 12.63, 12.22, 12.71, 13.22, 12.98, 12.12, 12.73, 11.89, 12.11], "all": [11.65, 12.04, 12.53, 12.1, 12.59, 13.08, 12.85, 12.35, 12.6, 11.76, 11.99]}, "Table B.9:": {"kerala": [28.9, 30.2, 30.9, 30.9, 32.9, 40.3, 38.9, 37.9, 36.3, 36.2, null], "eight": [22.84, 24.43, 24.75, 25.11, 26.68, 31.19, 29.82, 28.91, 29.02, 28.89, null], "major": [23.97, 25.3, 25.46, 25.63, 26.8, 31.19, 29.3, 28.41, 28.29, 28.61, null], "all": [23.7, 25.1, 25.1, 25.3, 26.6, 31.0, 29.1, 28.2, 28.1, 28.4, null]}, "Table B.10:": {"kerala": [1.72, 2.44, 2.41, 2.22, 1.78, 3.35, 3.2, 0.89, 1.6, 2.34, 1.9], "eight": [0.81, 1.06, 0.79, 0.69, 1.34, 2.47, 1.47, 0.94, 1.13, 1.38, 1.17], "major": [0.03, 0.3, 0.18, 0.12, 0.64, 1.94, 0.49, 0.3, 0.36, 0.64, 0.28], "all": [-0.02, 0.23, 0.11, 0.09, 0.6, 1.87, 0.43, 0.23, 0.31, 0.59, 0.23]}, "Table B.11:": {"kerala": [3.17, 4.17, 3.83, 3.42, 2.93, 5.31, 4.98, 2.46, 3.02, 3.58, 3.16], "eight": [2.73, 3.75, 2.55, 2.57, 2.97, 4.25, 3.32, 2.78, 3.04, 3.31, 3.14], "major": [3.13, 3.57, 2.45, 2.47, 2.62, 4.08, 2.79, 2.72, 2.93, 3.53, 3.23], "all": [3.05, 3.48, 2.4, 2.45, 2.61, 4.05, 2.77, 2.68, 2.91, 3.58, 3.29]}, "Table A.8:": {"kerala": [0.57, 0.52, 0.54, 0.52, 0.51, 0.53, 0.59, 0.69, 0.59, 0.61, 0.59], "all": [0.76, 0.66, 0.72, 0.73, 0.71, 0.71, 0.8, 0.84, 0.84, 0.9, 0.95]}, "Table B.4:": {"kerala": [34.52, 37.65, 38.97, 35.21, 36.62, 29.56, 39.36, 29.76, 32.24, 32.08, 30.1], "all": [16.43, 24.06, 27.02, 26.35, 27.28, 33.04, 24.52, 23.78, 22.81, 22.09, 22.2]}, "Table B.5:": {"kerala": [30.28, 31.25, 32.37, 29.64, 31.55, 23.37, 31.41, 27.83, 28.14, 26.3, 25.55], "all": [16.39, 23.59, 26.8, 26.17, 26.09, 28.9, 23.77, 23.39, 22.28, 21.21, 21.85]}, "Table B.8:": {"kerala": [69.54, 73.88, 81.19, 73.73, 79.05, 70.45, 82.4, 68.39, 74.52, 75.2, 70.33], "all": [39.26, 47.39, 51.51, 50.55, 53.38, 62.26, 50.74, 49.05, 48.21, 46.08, 46.36]}, "Table C.3:": {"union": [3.9, 3.5, 3.5, 3.4, 4.6, 9.2, 6.7, 6.5, 5.5, 4.8, 4.4], "kerala": [3.17, 4.17, 3.83, 3.42, 2.93, 5.31, 4.98, 2.46, 3.02, 3.86, 3.78], "all": [3.0, 3.5, 2.4, 2.4, 2.6, 4.1, 2.8, 2.7, 2.9, 3.6, 3.3]}}};
+const C={teal:'#0e6b73',tealD:'#0a4a52',navy:'#0c3640',gold:'#d6932b',goldD:'#b8791f',red:'#c0392b',blue:'#2c6e8f',green:'#1f7a5a',grayb:'#9aa7a0',soft:'#5d6f73',ink:'#15323a',grid:'rgba(21,50,58,.07)'};
+Chart.defaults.font.family="'Mukta', sans-serif";Chart.defaults.font.size=11.5;Chart.defaults.color=C.soft;
+
+/* ── Data Labels global config ── */
+Chart.register(ChartDataLabels);
+Chart.defaults.set('plugins.datalabels',{
+  display:'auto',
+  color:'#15323a',
+  font:{size:8,weight:'700',family:"'Mukta',sans-serif"},
+  anchor:'end',
+  align:'top',
+  offset:2,
+  padding:{top:2,bottom:2,left:3,right:3},
+  backgroundColor:'rgba(255,255,255,0.72)',
+  borderRadius:3,
+  clamp:true,
+  formatter:function(v){
+    if(v==null||v===''||isNaN(parseFloat(v)))return null;
+    const n=parseFloat(v);
+    if(Math.abs(n)>=10000)return'₹'+(n/1000).toFixed(0)+'k';
+    if(Math.abs(n)>=1000)return'₹'+(n/1000).toFixed(1)+'k';
+    if(Number.isInteger(n)||Math.abs(n)>=100)return n%1===0?n:n.toFixed(1);
+    return n.toFixed(2)+'%';
+  }
+});
+
+const LEG={labels:{boxWidth:11,boxHeight:11,usePointStyle:true,pointStyle:'rectRounded',padding:13,font:{weight:600,size:11.5},color:C.ink}};
+const TIP={backgroundColor:C.navy,padding:10,cornerRadius:6,titleFont:{family:'Fraunces',weight:'600',size:13},bodyFont:{size:12},boxPadding:5};
+const cr=v=>v==null?'—':'₹'+Number(v).toLocaleString('en-IN')+' cr';
+const Y16=['2016-17','2017-18','2018-19','2019-20','2020-21','2021-22','2022-23','2023-24','2024-25','2025-26'];
+const Y11=['2015-16','2016-17','2017-18','2018-19','2019-20','2020-21','2021-22','2022-23','2023-24','2024-25','2025-26'];
+
+const D={
+  rd_acc:[2.51,2.41,2.23,1.76,2.51,2.23,0.88,1.60,2.49,2.58], rd_be:[1.50,2.14,1.66,1.00,1.55,1.93,2.30,2.11,2.12,1.90],
+  fd_acc:[4.28,3.83,3.45,2.89,4.40,3.99,2.44,3.02,3.86,3.78], fd_be:[3.03,3.43,3.10,3.00,3.00,3.50,3.91,3.50,3.40,3.16],
+  fd_tgt:[3,3,3,3,3,4.5,4,3.5,3.5,3], rd_tgt:[2,1.7,1.4,1.1,0,2.5,2,1.5,1.5,1],
+  debt_acc:[29.37,30.04,30.4,32.02,38.51,35.92,34.62,34.29,34.15,33.22], debt_be:[26.54,27.68,30.7,30.21,30.07,37.39,37.18,36.05,35.15,33.77],
+  debt_tgt:[29.8,30.4,30.01,29.67,31.67,34.7,34.5,33.7,32.8,32.0],
+  bal:[1643.49,1950.23,887.15,188.15,-529.82,2809.64,5232.60,7096.31,4053.16,2076.17,6322.36],
+  omb:[15000,17300,20500,19500,18073,28566,27000,30839,42438,53666,49788],
+  ot_be:[47044,53411,58588,65785,67420,71833,74098,81039,84884,91515], ot_act:[42176,46460,50644,50323,47661,58340,71968,74329,76642,83731], ot_pct:[90,87,86,77,71,81,97,92,90,92],
+  rev_be:[93990,109628,115662,124125,129837,147891,157066,159361,166501,179476], rev_act:[91096,99948,110316,104720,123446,146180,141951,142626,155921,173972],
+  cap_be:[24288,23580,26265,17855,14428,14141,16522,16728,17826,19106], cap_act:[18992,10290,9753,9665,15438,17046,16788,16880,17086,18484],
+  wmaY:['2011','2012','2013','2014','2015','2016','2017','2018','2019','2020','2021','2022','2023','2024','2025','2026'],
+  wma:[0,0,0,1,18,23,25,50,67,234,195,110,54,125,262,145], od:[0,0,0,0,6,0,0,0,0,57,35,14,1,67,84,12],
+  arrL:['Staff DA','Pensioner DR','Banks/contractors','Supplyco','Health (KASP)','LSGD grants','UGC DA','KMSCL','SC/ST schol.'],
+  arr:[21670,14387,3431,2893,2017,1982,1500,476,377],
+  pseY:['2021-22','2022-23','2023-24','2024-25'], pseLoss:[31571.0,54475.4,78069.2,78851.0],
+  pseSupY:['2020-21','2021-22','2022-23','2023-24','2024-25'],
+  subsidy:[4569.79,1654.71,1444.75,1641.85,1504.04], budsup:[2449.04,2928.39,1267.6,1987.83,2401.83], divid:[110.19,227.98,48.93,242.68,248.79],
+  kseblY:['2014-15','2015-16','2016-17','2017-18','2018-19','2019-20','2020-21','2021-22','2022-23','2023-24','2024-25'],
+  ksebRev:[10412.9,11247.2,11586.9,12665.5,14002.9,14854.6,15169.6,16996.4,18938.9,21802.5,22682.80],
+  ksebExp:[11923.4,11822.7,13239.3,13916.3,15016.9,15892.1,12892,13519.3,19920.4,22336.5,22587.57],
+  ksebPat:[-1272.9,-313.29,-1652.5,-784.09,-290,-269.55,-475.08,97.66,-991.78,212.45,95.23],
+  utY:['2019-20','2020-21','2021-22','2022-23','2023-24','2024-25'],
+  ksrtcNW:[-11128.86,-13619.39,-15618.45,-17343.19,-18307.17,-19820.63], kwaNW:[4725.8,5284.2,7432.9,10090.3,12563.3,14827.5],
+  planY:['2017-18','2018-19','2019-20','2020-21','2021-22','2022-23','2023-24','2024-25'],
+  planOut:[26500,29150,30610,27610,27610,30370,30370,30370], planExp:[29896.8,26047.3,24445.2,36214.2,39281.8,37241.5,38714.9,41287.7], planPct:[112.82,89.36,79.86,131.16,142.27,122.63,127.48,135.95],
+  compY:['2017-18','2018-19','2019-20','2020-21','2021-22','2022-23','2023-24','2024-25','2025-26'],
+  cGen:[2.53,5.09,12.59,9.66,14.51,12.03,19.60,10.67,16.13], cSoc:[53.78,48.55,37.73,36.95,38.13,39.17,33.66,37.83,30.68], cEco:[38.29,40.32,44.05,45.91,39.18,42.29,39.07,45.03,47.52], cLoan:[5.40,6.04,5.64,7.48,8.18,6.51,7.68,6.47,5.68],
+  planShare:[21.84,22.28,23.18,18.32,18.52,23.25,21.11,20.63,21.51,19.05,17.55],
+  scsp:[84.82,77.81,49.60,90.05,87.63,82.03,73.89,83.49], tsp:[76.31,67.79,55.68,65.88,85.15,80.01,56.29,64.15]
+};
+
+const charts={};
+function dline(cv,labels,ds,o={}){return new Chart(cv,{type:'line',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{datalabels:{anchor:'end',align:'top',offset:2},legend:LEG,tooltip:{...TIP,callbacks:o.cb||{}}},scales:{y:Object.assign({grid:{color:C.grid}},o.y||{}),x:{grid:{display:false},ticks:{maxRotation:55,minRotation:55,font:{size:9}}}}}});}
+function dbar(cv,labels,ds,o={}){return new Chart(cv,{type:'bar',data:{labels,datasets:ds},options:{responsive:true,maintainAspectRatio:false,indexAxis:o.h?'y':'x',interaction:{mode:'index',intersect:false},plugins:{datalabels:o.dl?o.dl:o.h?{anchor:'end',align:'right',offset:2}:{anchor:'end',align:'top',offset:1},legend:o.noleg?{display:false}:LEG,tooltip:{...TIP,callbacks:o.cb||{}}},scales:o.h?{x:{grid:{color:C.grid},ticks:{callback:o.fmt||(v=>v)}},y:{grid:{display:false},ticks:{font:{size:10}},stacked:o.stack}}:{y:Object.assign({grid:{color:C.grid},ticks:{callback:o.fmt||(v=>v)},stacked:o.stack},o.y||{}),x:{grid:{display:false},stacked:o.stack,ticks:{maxRotation:55,minRotation:55,font:{size:9}}}}}});}
+const pct={callback:v=>v+'%'}, krfmt=v=>'₹'+(v/1000)+'k';
+const pctCb={label:c=>` ${c.dataset.label}: ${c.parsed.y}%`}, crCb={label:c=>` ${c.dataset.label}: ${cr(c.parsed.y)}`};
+function basis(){return document.getElementById('f_basis').value;}
+
+/* ---- builders ---- */
+const R={};
+R.c_snap=cv=>{charts.snap=dline(cv,Y16,snapDs(),{y:{ticks:pct},cb:pctCb});};
+function snapDs(){const b=basis();const m=window._snapMetric||'fiscal';
+  if(m==='debt')return[{label:'Debt '+(b==='be'?'(BE)':'(Accounts)'),data:b==='be'?D.debt_be:D.debt_acc,borderColor:C.teal,backgroundColor:'rgba(14,107,115,.08)',borderWidth:2.8,fill:true,tension:.3,pointRadius:2.5},{label:'FRBM target',data:D.debt_tgt,borderColor:C.red,borderWidth:1.7,borderDash:[6,4],pointRadius:0}];
+  const acc=m==='fiscal'?D.fd_acc:D.rd_acc, be=m==='fiscal'?D.fd_be:D.rd_be, tgt=m==='fiscal'?D.fd_tgt:D.rd_tgt;
+  return[{label:(m==='fiscal'?'Fiscal':'Revenue')+' deficit '+(b==='be'?'(BE)':'(Accounts)'),data:b==='be'?be:acc,borderColor:m==='fiscal'?C.red:C.teal,backgroundColor:m==='fiscal'?'rgba(192,57,43,.08)':'rgba(14,107,115,.08)',borderWidth:2.8,fill:true,tension:.3,pointRadius:2.5},{label:'FRBM target',data:tgt,borderColor:C.gold,borderWidth:1.7,borderDash:[6,4],pointRadius:0}];}
+function setSnapMetric(m,btn){window._snapMetric=m;document.querySelectorAll('#tg_snap .toggle-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
+  const t={fiscal:'Fiscal deficit has stayed near 3–4% of GSDP, above target — the State borrows to cover the gap.',revenue:'A revenue deficit means even day-to-day spending is part-funded by borrowing.',debt:'Debt jumped in the COVID year and remains above the FRBM ceiling.'};
+  document.getElementById('inf_snap').textContent=t[m];
+  if(charts.snap){charts.snap.data.datasets=snapDs();charts.snap.update();}}
+
+const treasuryDs=()=>[{type:'bar',label:'Treasury balance',data:D.bal,yAxisID:'y',backgroundColor:D.bal.map(v=>v<0?C.red:C.teal),borderRadius:3,maxBarThickness:30,order:2},{type:'line',label:'OMB raised',datalabels:{display:false},data:D.omb,yAxisID:'y1',borderColor:C.gold,borderWidth:2.4,tension:.3,pointRadius:2.5,order:1}];
+const treasuryOpts={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:LEG,tooltip:{...TIP,callbacks:crCb}},scales:{y:{grid:{color:C.grid},position:'left',ticks:{callback:v=>'₹'+(v/1000)+'k'}},y1:{grid:{drawOnChartArea:false},position:'right',ticks:{callback:v=>'₹'+(v/1000)+'k'}},x:{grid:{display:false},ticks:{maxRotation:55,minRotation:55,font:{size:9}}}}};
+R.c_treasury=cv=>new Chart(cv,{data:{labels:Y11,datasets:treasuryDs()},options:treasuryOpts});
+R.c_treasury2=cv=>new Chart(cv,{data:{labels:Y11,datasets:treasuryDs()},options:treasuryOpts});
+
+const owntaxDs=()=>({labels:Y16,datasets:[{type:'bar',label:'Budget estimate',data:D.ot_be,backgroundColor:'rgba(14,107,115,.3)',borderRadius:2,maxBarThickness:16},{type:'bar',label:'Actuals',data:D.ot_act,backgroundColor:C.teal,borderRadius:2,maxBarThickness:16},{type:'line',label:'Realisation %',datalabels:{display:false},data:D.ot_pct,borderColor:C.gold,borderWidth:2.2,tension:.3,pointRadius:2.5,yAxisID:'y1'}]});
+const owntaxOpts={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:LEG,tooltip:{...TIP,callbacks:{label:c=>c.dataset.yAxisID==='y1'?` ${c.dataset.label}: ${c.parsed.y}%`:` ${c.dataset.label}: ${cr(c.parsed.y)}`}}},scales:{y:{grid:{color:C.grid},ticks:{callback:krfmt}},y1:{grid:{drawOnChartArea:false},position:'right',min:60,max:100,ticks:pct},x:{grid:{display:false},ticks:{maxRotation:55,minRotation:55,font:{size:9}}}}};
+R.c_owntax=cv=>new Chart(cv,{type:'bar',data:owntaxDs(),options:owntaxOpts});
+R.c_owntax2=cv=>new Chart(cv,{type:'bar',data:owntaxDs(),options:owntaxOpts});
+
+R.c_def=cv=>{charts.def=dline(cv,Y16,defDs(),{y:{ticks:pct},cb:pctCb});};
+function defDs(){const b=basis();return[
+  {label:'Fiscal deficit '+(b==='be'?'(BE)':'(Acc)'),data:b==='be'?D.fd_be:D.fd_acc,borderColor:C.red,backgroundColor:'rgba(192,57,43,.07)',borderWidth:2.6,fill:true,tension:.3,pointRadius:2.5},
+  {label:'Revenue deficit '+(b==='be'?'(BE)':'(Acc)'),data:b==='be'?D.rd_be:D.rd_acc,borderColor:C.teal,borderWidth:2.6,tension:.3,pointRadius:2.5},
+  {label:'FD target',data:D.fd_tgt,borderColor:C.gold,borderWidth:1.6,borderDash:[6,4],pointRadius:0}];}
+R.c_debt=cv=>{charts.debt=dline(cv,Y16,debtDs(),{y:{min:26,ticks:pct},cb:pctCb});};
+function debtDs(){const b=basis();return[{label:'Debt '+(b==='be'?'(BE)':'(Acc)'),data:b==='be'?D.debt_be:D.debt_acc,borderColor:C.tealD,backgroundColor:'rgba(10,74,82,.1)',borderWidth:2.8,fill:true,tension:.3,pointRadius:2.5},{label:'FRBM target',data:D.debt_tgt,borderColor:C.red,borderWidth:1.7,borderDash:[6,4],pointRadius:0}];}
+
+R.c_exp=cv=>dbar(cv,Y16,[{label:'Revenue exp (actual)',data:D.rev_act,backgroundColor:C.teal,borderRadius:2,maxBarThickness:15},{label:'Capital exp (actual)',data:D.cap_act,backgroundColor:C.gold,borderRadius:2,maxBarThickness:15}],{fmt:krfmt,rot:60,cb:crCb});
+R.c_transfers=cv=>dbar(cv,['Share of central taxes','Revenue deficit grants','Other grants','Total'],[{label:'Interim assumption',data:[42114.32,14137.69,3522.00,59774.11],backgroundColor:'rgba(14,107,115,.35)',borderRadius:3,maxBarThickness:46},{label:'Union actual',data:[36355.39,0,2918.25,39273.64],backgroundColor:C.red,borderRadius:3,maxBarThickness:46}],{fmt:krfmt,cb:crCb});
+
+R.c_wma=cv=>dbar(cv,D.wmaY,[{label:'Days in WMA',data:D.wma,backgroundColor:C.gold,borderRadius:2,maxBarThickness:20},{label:'Days in Overdraft',data:D.od,backgroundColor:C.red,borderRadius:2,maxBarThickness:20}],{stack:true,cb:{label:c=>` ${c.dataset.label}: ${c.parsed.y} days`}});
+R.c_arrears=cv=>dbar(cv,D.arrL,[{label:'₹ crore',data:D.arr,backgroundColor:[C.red,C.red,C.gold,C.gold,C.blue,C.blue,C.teal,C.teal,C.teal],borderRadius:3,maxBarThickness:20}],{h:true,noleg:true,fmt:krfmt,cb:{label:c=>' '+cr(c.parsed.x)}});
+
+R.c_pseloss=cv=>dline(cv,D.pseY,[{label:'Accumulated loss',data:D.pseLoss,borderColor:C.red,backgroundColor:'rgba(192,57,43,.1)',borderWidth:3,fill:true,tension:.3,pointRadius:4}],{y:{ticks:{callback:krfmt}},cb:crCb});
+R.c_psebudget=cv=>dbar(cv,D.pseSupY,[{label:'Subsidies/grants',data:D.subsidy,backgroundColor:C.gold,borderRadius:2,maxBarThickness:20},{label:'Budgetary support',data:D.budsup,backgroundColor:C.blue,borderRadius:2,maxBarThickness:20},{label:'Dividend received',data:D.divid,backgroundColor:C.green,borderRadius:2,maxBarThickness:20}],{fmt:krfmt,cb:crCb});
+R.c_ksebl=cv=>new Chart(cv,{data:{labels:D.kseblY,datasets:[{type:'bar',label:'Revenue',data:D.ksebRev,backgroundColor:'rgba(14,107,115,.4)',borderRadius:2,maxBarThickness:13},{type:'bar',label:'Expenditure',data:D.ksebExp,backgroundColor:'rgba(192,57,43,.4)',borderRadius:2,maxBarThickness:13},{type:'line',label:'Net profit/loss',datalabels:{display:false},data:D.ksebPat,borderColor:C.tealD,borderWidth:2.4,tension:.3,pointRadius:2.5,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:LEG,tooltip:{...TIP,callbacks:crCb}},scales:{y:{grid:{color:C.grid},ticks:{callback:krfmt}},y1:{grid:{drawOnChartArea:false},position:'right',ticks:{callback:krfmt}},x:{grid:{display:false},ticks:{maxRotation:55,minRotation:55,font:{size:9}}}}}});
+R.c_ksrtc=cv=>dline(cv,D.utY,[{label:'KSRTC net worth',data:D.ksrtcNW,borderColor:C.red,borderWidth:2.6,tension:.3,pointRadius:2.5},{label:'Water Authority net worth',data:D.kwaNW,borderColor:C.teal,borderWidth:2.6,tension:.3,pointRadius:2.5}],{y:{ticks:{callback:krfmt}},cb:crCb});
+
+R.c_planout=cv=>new Chart(cv,{data:{labels:D.planY,datasets:[{type:'bar',label:'Plan outlay',data:D.planOut,backgroundColor:'rgba(14,107,115,.35)',borderRadius:2,maxBarThickness:20},{type:'bar',label:'Plan expenditure',data:D.planExp,backgroundColor:C.teal,borderRadius:2,maxBarThickness:20},{type:'line',label:'Exp as % of outlay',datalabels:{display:false},data:D.planPct,borderColor:C.gold,borderWidth:2.4,tension:.3,pointRadius:2.5,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:LEG,tooltip:{...TIP,callbacks:{label:c=>c.dataset.yAxisID==='y1'?` ${c.dataset.label}: ${c.parsed.y}%`:` ${c.dataset.label}: ${cr(c.parsed.y)}`}}},scales:{y:{grid:{color:C.grid},ticks:{callback:krfmt}},y1:{grid:{drawOnChartArea:false},position:'right',ticks:pct},x:{grid:{display:false},ticks:{maxRotation:55,minRotation:55,font:{size:9}}}}}});
+R.c_plancomp=cv=>dbar(cv,D.compY,[{label:'Social',data:D.cSoc,backgroundColor:C.teal},{label:'Economic',data:D.cEco,backgroundColor:C.gold},{label:'General',data:D.cGen,backgroundColor:C.blue},{label:'Loan',data:D.cLoan,backgroundColor:C.grayb}],{stack:true,y:{max:100,ticks:pct},rot:60,cb:pctCb,dl:{anchor:'center',align:'center',display:'auto'}});
+R.c_planshare=cv=>dline(cv,Y11,[{label:'Plan share of total',data:D.planShare,borderColor:C.teal,backgroundColor:'rgba(14,107,115,.1)',borderWidth:2.8,fill:true,tension:.3,pointRadius:2.5}],{y:{ticks:pct},rot:60,cb:{label:c=>` ${c.parsed.y}%`}});
+R.c_scsp=cv=>dline(cv,D.planY,[{label:'SCSP',data:D.scsp,borderColor:C.teal,borderWidth:2.6,tension:.3,pointRadius:2.5},{label:'TSP',data:D.tsp,borderColor:C.gold,borderWidth:2.6,tension:.3,pointRadius:2.5}],{y:{max:100,ticks:pct},rot:60,cb:pctCb});
+
+/* peer page */
+function peerDs(key){const s=APP.series[key];const ds=[{label:'Kerala',data:s.kerala,borderColor:C.red,backgroundColor:'rgba(192,57,43,.07)',borderWidth:2.8,fill:true,tension:.3,pointRadius:2.5}];
+  if(s.eight)ds.push({label:'8 Comparable States (AP, GJ, KA, MH, PB, RJ, TN, WB)',data:s.eight,borderColor:C.teal,borderWidth:1.8,tension:.3,pointRadius:0});
+  if(s.major)ds.push({label:'18 Major States (avg)',data:s.major,borderColor:C.blue,borderWidth:1.6,borderDash:[5,3],tension:.3,pointRadius:0});
+  if(s.all)ds.push({label:'All States (national avg)',data:s.all,borderColor:C.gold,borderWidth:1.6,borderDash:[2,3],tension:.3,pointRadius:0});return ds;}
+const PEER_OPTS=[
+  /* ── Receipt indicators ── */
+  'Table A.1:|Revenue Receipts (% GSDP)',
+  'Table A.2:|Revenue Receipts / Total Receipts (%)',
+  'Table A.3:|Own Revenue Receipts (% GSDP)',
+  'Table A.4:|Own Revenue Receipts / Total Receipts (%)',
+  'Table A.5:|Own Tax Revenue (% GSDP)',
+  'Table A.6:|Own Tax Revenue / Own Revenue Receipts (%)',
+  'Table A.7:|SGST Revenue (% GSDP)',
+  'Table A.8:|GST Compensation (% GSDP)',
+  'Table A.9:|Central Tax Devolution (% GSDP)',
+  'Table A.10:|Non-Tax Revenue (% GSDP)',
+  /* ── Expenditure indicators ── */
+  'Table B.1:|Revenue Expenditure / Total Expenditure (%)',
+  'Table B.2:|Capital Expenditure (% GSDP)',
+  'Table B.3:|Total Expenditure (% GSDP)',
+  'Table B.4:|Salary Expenditure / Revenue Expenditure (%)',
+  'Table B.5:|Pension Expenditure / Revenue Expenditure (%)',
+  'Table B.6:|Interest Payments / Revenue Receipts (%)',
+  'Table B.7:|Interest Payments / Total Expenditure (%)',
+  'Table B.8:|Revenue Expenditure / Revenue Receipts (%)',
+  /* ── Deficit and debt indicators ── */
+  'Table B.9:|Outstanding Liabilities (% GSDP)',
+  'Table B.10:|Revenue Deficit (% GSDP)',
+  'Table B.11:|Gross Fiscal Deficit (% GSDP)',
+];
+function renderPeer(){const sel=document.getElementById('peerMetric');const key=sel.value;
+  if(charts.peer)charts.peer.destroy();
+  charts.peer=dline(document.getElementById('c_peer'),APP.years,peerDs(key),{y:{ticks:pct},rot:60,cb:{label:c=>` ${c.dataset.label}: ${c.parsed.y==null?'n.a.':c.parsed.y+'%'}`}});
+  document.getElementById('inf_peer').textContent='Kerala (red) vs peer-group averages — '+sel.options[sel.selectedIndex].text+', as % of GSDP.';}
+R.c_peer=cv=>{const sel=document.getElementById('peerMetric');if(!sel.options.length){PEER_OPTS.forEach(o=>{const[k,l]=o.split('|');const op=document.createElement('option');op.value=k;op.textContent=l;sel.appendChild(op);});sel.value='Table B.11:';}renderPeer();};
+R.c_c3=cv=>{const c3=APP.series['Table C.3:'];dline(cv,APP.years,[{label:'Union',data:c3.union,borderColor:C.blue,borderWidth:2.4,tension:.3,pointRadius:2},{label:'Kerala',data:c3.kerala,borderColor:C.red,backgroundColor:'rgba(192,57,43,.06)',borderWidth:2.8,fill:true,tension:.3,pointRadius:2.5},{label:'All States (national avg)',data:c3.all,borderColor:C.gold,borderWidth:1.7,borderDash:[5,3],tension:.3,pointRadius:0}],{y:{ticks:pct},rot:60,cb:pctCb});};
+R.c_liab=cv=>{const s=APP.series['Table B.9:'];dline(cv,APP.years,peerDs('Table B.9:'),{y:{ticks:pct},rot:60,cb:{label:c=>` ${c.dataset.label}: ${c.parsed.y==null?'n.a.':c.parsed.y+'%'}`}});};
+
+/* alerts */
+const ALERTS=[
+ ['Treasury on RBI life-support','262 days in Ways &amp; Means Advances in 2025 — the worst on record.',''],
+ ['Debt above the ceiling','Outstanding liabilities at 35.5% of GSDP (incl. KIIFB off-budget), over the 32% FRBM target.',''],
+ ['₹48,733 cr in unpaid bills','Salary, pension, contractor and scheme dues inherited as on 31 Mar 2026.',''],
+ ['Central transfers fell short','₹20,500 cr less than the interim budget assumed for 2026-27.',''],
+ ['Revenue over-estimated','Own-tax actuals fell below budget in every year of the decade.','amber'],
+ ['PSE losses mounting','Public enterprises accumulated loss exceeds ₹72,000 cr.','amber'],
+ ['Development squeezed','Plan share of the budget fell to a decade-low 17.6%.','amber']
+];
+function fillAlerts(id){const el=document.getElementById(id);if(!el||el.dataset.f)return;el.dataset.f=1;
+  ALERTS.forEach(a=>{const d=document.createElement('div');d.className='alert-item'+(a[2]?' '+a[2]:'');d.innerHTML=`<i class="fas fa-${a[2]?'circle-exclamation':'triangle-exclamation'}"></i><div><span class="alert-title">${a[0]}</span>${a[1]}</div>`;el.appendChild(d);});}
+
+/* nav + lazy render */
+
+const PAGES = {
+  'pg-snapshot':{num:'01',title:'Executive Snapshot',ml:'ഒരു നോട്ടത്തിൽ'},
+  'pg-budget':  {num:'02',title:'Budget & Deficits',ml:'ബജറ്റ് കമ്മി'},
+  'pg-cash':    {num:'03',title:'Cash & Treasury',ml:'ഖജനാവ്'},
+  'pg-pse':     {num:'04',title:'Public Enterprises',ml:'പൊതു കോർപ്പറേഷൻ'},
+  'pg-plan':    {num:'05',title:'Plan & Development',ml:'പദ്ധതി ചെലവ്'},
+  'pg-peer':    {num:'06',title:'Peer Comparison',ml:'സമതുലനം'}
+};
+/* ALERTS defined in JS core */
+
+const rendered=new Set();
+function renderPage(pid){
+  document.querySelectorAll('#'+pid+' canvas').forEach(cv=>{
+    if(rendered.has(cv.id))return;
+    if(R[cv.id]){try{R[cv.id](cv);rendered.add(cv.id);}catch(e){console.warn(cv.id,e);}}
+  });
+  if(pid==='pg-snapshot')fillAlerts('alerts');
+  if(pid==='pg-cash')fillAlerts('alerts_cash');
+  setTimeout(()=>{
+    document.querySelectorAll('#'+pid+' canvas').forEach(cv=>{
+      const inst=Chart.getChart(cv);if(inst)inst.resize();
+    });
+  },60);
+}
+function fillAlerts(id){
+  const el=document.getElementById(id);if(!el||el.dataset.f)return;el.dataset.f=1;
+  ALERTS.forEach(a=>{const d=document.createElement('div');d.className='alert-item'+(a[2]?' '+a[2]:'');
+    d.innerHTML=`<i class="fas fa-${a[2]?'circle-exclamation':'triangle-exclamation'}"></i><div><span class="alert-title">${a[0]}</span>${a[1]}</div>`;
+    el.appendChild(d);});
+}
+function navigate(pid,el){
+  document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active'));
+  document.getElementById(pid).classList.add('active');
+  document.querySelectorAll('.sb-item').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  const pg=PAGES[pid];
+  document.getElementById('hdrTitle').textContent=pg.title;
+  document.getElementById('hdrMl').textContent=pg.ml;
+  renderPage(pid);
+}
+function openSection(pid){
+  document.getElementById('landing').style.display='none';
+  document.getElementById('app').style.display='block';
+  const el=document.querySelector(`.sb-item[data-pid="${pid}"]`);
+  navigate(pid,el);
+}
+function goLanding(){
+  document.getElementById('app').style.display='none';
+  document.getElementById('landing').style.display='flex';
+}
+function basis(){return document.getElementById('f_basis').value;}
+function applyBasis(){
+  const v=document.getElementById('f_basis').value;
+  [['snap',snapDs],['def',defDs],['debt',debtDs]].forEach(([k,fn])=>{
+    if(charts[k]){charts[k].data.datasets=fn();charts[k].update();}
+  });
+}
+function resetFilters(){document.getElementById('f_basis').value='acc';applyBasis();}
+window.addEventListener('resize',()=>Object.values(Chart.instances).forEach(c=>c.resize()));
+
+/* ═══ ACRONYMS DATA (per page) ═══════════════════ */
+const ABV = {
+  'pg-snapshot': [
+    ['GSDP','Gross State Domestic Product','Total value of all goods & services produced in Kerala in a year — used as the benchmark denominator'],
+    ['FRBM','Fiscal Responsibility & Budget Management Act','Law that sets legal ceilings on the State\'s deficit and debt levels'],
+    ['FD','Fiscal Deficit','Total gap between government expenditure and revenue in a year'],
+    ['RD','Revenue Deficit','Gap in day-to-day (non-capital) spending — a persistent RD means borrowing for routine costs'],
+    ['RBI','Reserve Bank of India','India\'s central bank; provides emergency short-term credit to State governments'],
+    ['WMA','Ways & Means Advances','Short-term emergency overdraft facility provided by the RBI to the State treasury'],
+    ['OD','Overdraft','When the State draws funds beyond its sanctioned WMA limit'],
+    ['OMB','Open Market Borrowing','Bonds issued by the State government to raise long-term funds from the financial market'],
+    ['BE','Budget Estimate','Amount planned and approved in the annual State budget'],
+    ['RE','Revised Estimate','Updated mid-year projection of revenue and expenditure'],
+  ],
+  'pg-budget': [
+    ['GSDP','Gross State Domestic Product','Benchmark for comparing fiscal indicators across years and states'],
+    ['FRBM','Fiscal Responsibility & Budget Management Act','Sets legal limits on deficit (3% FD) and debt levels for the State'],
+    ['FD','Fiscal Deficit','Total borrowing requirement of the State in a year'],
+    ['RD','Revenue Deficit','Excess of revenue expenditure over revenue receipts'],
+    ['PD','Primary Deficit','Fiscal deficit minus interest payments — indicates the underlying structural gap'],
+    ['BE','Budget Estimate','Projections made at the start of the financial year'],
+    ['RE','Revised Estimate','Mid-year revision of the budget based on actual trends'],
+    ['SGST','State Goods & Services Tax','State\'s share of the unified GST collected on goods and services'],
+    ['CSS','Centrally Sponsored Schemes','Development programmes funded jointly by the Centre and State governments'],
+  ],
+  'pg-cash': [
+    ['OMB','Open Market Borrowing','State-issued bonds to raise funds from the market; the primary source of deficit financing'],
+    ['WMA','Ways & Means Advances','Emergency credit from the RBI when the State\'s account falls short'],
+    ['OD','Overdraft','Borrowing beyond the WMA limit; incurs penal interest from RBI'],
+    ['RBI','Reserve Bank of India','Maintains the State\'s consolidated fund account and provides WMA/OD'],
+    ['DA','Dearness Allowance','Cost-of-living supplement paid to serving government employees on top of basic salary'],
+    ['DR','Dearness Relief','Equivalent cost-of-living supplement paid to government pensioners'],
+    ['KASP','Karunya Arogya Suraksha Padhathi','Kerala\'s State health insurance scheme providing cashless medical cover'],
+    ['KMSCL','Kerala Medical Services Corporation Ltd','State agency for centralised procurement of medicines and medical supplies'],
+    ['LSGD','Local Self Government Department','Department overseeing Kerala\'s three-tier panchayat and urban local bodies'],
+    ['UGC','University Grants Commission','Central body funding higher education; DA dues relate to UGC-pay-scale employees'],
+  ],
+  'pg-pse': [
+    ['SLPE','State Level Public Enterprise','A company or statutory body owned or controlled by the State government'],
+    ['PSE','Public Sector Enterprise','Umbrella term for all State-owned companies and boards'],
+    ['GoK','Government of Kerala','The State government as an investor, lender and guarantor to SLPEs'],
+    ['KSEBL','Kerala State Electricity Board Ltd','State-owned electricity utility — generation, transmission and distribution'],
+    ['KSRTC','Kerala State Road Transport Corporation','State-owned bus service corporation'],
+    ['KWA','Kerala Water Authority','State agency for drinking water supply and sewerage services'],
+    ['KIIFB','Kerala Infrastructure Investment Fund Board','Off-budget vehicle that raises loans to fund large infrastructure projects'],
+    ['PAT','Profit After Tax','Net profit remaining after all taxes — key measure of enterprise financial health'],
+    ['NW','Net Worth','Total assets minus total liabilities; negative net worth = technically insolvent'],
+  ],
+  'pg-plan': [
+    ['SCSP','Scheduled Caste Sub-Plan','Ring-fenced budget allocation for the welfare of Scheduled Caste communities'],
+    ['TSP','Tribal Sub-Plan','Ring-fenced budget allocation for the welfare of Scheduled Tribe communities'],
+    ['SCDD','Scheduled Caste Development Department','State department responsible for SCSP implementation and monitoring'],
+    ['STDD','Scheduled Tribe Development Department','State department responsible for TSP implementation and monitoring'],
+    ['LSG','Local Self Government','Elected local bodies (grama panchayats, municipalities, corporations) that implement a share of the plan'],
+    ['SC','Scheduled Caste','Communities listed in the Constitution as historically disadvantaged'],
+    ['ST','Scheduled Tribe','Tribal communities listed in the Constitution for protective provisions'],
+    ['OBC','Other Backward Class','Socially and educationally backward communities entitled to reservations and welfare schemes'],
+    ['CSS','Centrally Sponsored Schemes','Central government programmes co-funded by States; included in plan expenditure totals'],
+  ],
+  'pg-peer': [
+    ['GSDP','Gross State Domestic Product','Used as denominator to make fiscal ratios comparable across states of different sizes'],
+    ['RBI','Reserve Bank of India','Source of the peer-comparison data (State Finances: A Study of Budgets)'],
+    ['TS','Telangana','One of the eight comparable southern/medium-sized states in the peer group'],
+    ['KA','Karnataka','One of the eight comparable states'],
+    ['HR','Haryana','One of the eight comparable states'],
+    ['WB','West Bengal','One of the eight comparable states'],
+    ['PB','Punjab','One of the eight comparable states'],
+    ['TN','Tamil Nadu','One of the eight comparable states'],
+    ['MH','Maharashtra','One of the eight comparable states'],
+    ['AP','Andhra Pradesh','One of the eight comparable states'],
+    ['FD','Gross Fiscal Deficit','Total borrowing requirement; used in the Centre-State comparison chart'],
+    ['GDP','Gross Domestic Product','National output figure used as denominator for Union government fiscal ratios'],
+  ]
+};
+
+let abvOpen = false;
+function toggleAbv(){
+  abvOpen = !abvOpen;
+  document.getElementById('abvPanel').classList.toggle('open', abvOpen);
+  document.getElementById('abvBackdrop').classList.toggle('open', abvOpen);
+}
+function updateAbv(pid){
+  const rows = ABV[pid] || [];
+  const pageName = PAGES[pid]?.title || '';
+  document.getElementById('abvPageName').textContent = pageName;
+  const body = document.getElementById('abvBody');
+  body.innerHTML = rows.map(([term, full, desc]) =>
+    `<div class="abv-row">
+      <div class="abv-term">${term}</div>
+      <div class="abv-def"><strong>${full}</strong><span>${desc}</span></div>
+    </div>`).join('');
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape' && abvOpen) toggleAbv(); });
+
+/* patch navigate to also update acronyms panel */
+const _navOrig = navigate;
+window.navigate = function(pid, el){
+  _navOrig(pid, el);
+  updateAbv(pid);
+};
+
+
+
+
+
+/* ═══ KPI INFO — create popup dynamically to avoid null errors ══ */
+(function(){
+  /* Create popup in DOM */
+  var pop = document.createElement('div');
+  pop.id = 'kpiPopup';
+  pop.innerHTML = '<div class="kpi-pop-head"><div><div class="kpi-pop-label" id="kpiPopLabel">KPI</div><div class="kpi-pop-val" id="kpiPopVal">—</div></div><button class="kpi-pop-close" onclick="closeKpiPop()"><i class=\"fas fa-xmark\"></i></button></div><div class="kpi-pop-body"><div class="kpi-pop-what" id="kpiPopWhat"></div><div id="kpiPopStatus" class="kpi-pop-status"></div><div class="kpi-pop-row" id="kpiPopTags"></div></div>';
+  document.body.appendChild(pop);
+
+  /* KPI explanations */
+  var KI = {
+    kpi_debt:{l:'Total Outstanding Debt',v:'₹5.07L cr',w:'Total money Kerala owes to all lenders combined. Works out to ~₹1.45 lakh per person in Kerala. The higher this grows, the more the annual budget is eaten up by interest payments alone.',s:'bad',st:'Interest alone costs ₹31,816 cr/year — and rising',tags:['35.5% of GSDP incl. KIIFB','₹1.45L per person','Above safe levels']},
+    kpi_fd:{l:'Fiscal Deficit',v:'3.78%',w:'For every ₹100 Kerala earned in 2025-26, it spent ₹103.78. That extra ₹3.78 had to be borrowed. The legal limit Kerala promised to stay within is 3%. Above that = the State broke its own rule.',s:'bad',st:'Above the 3% FRBM legal ceiling',tags:['Target: 3.0%','Actual: 3.78%','Must borrow the gap']},
+    kpi_wma:{l:'Days on RBI Support',v:'262 days',w:'On 262 out of 365 days in 2025, the treasury had no cash and needed emergency short-term loans from the RBI just to pay daily bills — salaries, pensions, scheme payments. Like overdrawing your account for 9 months of the year.',s:'bad',st:'Worst ever — up from 54 days in 2023',tags:['2023: 54 days','2024: 125 days','2025: 262 days']},
+    kpi_arrears:{l:'Inherited Arrears',v:'₹48,733 cr',w:'Bills that are already due but not yet paid. Salary allowances owed to govt staff, pension top-ups owed to retirees, dues to hospitals, contractors and students. Money owed to real people who already did the work.',s:'bad',st:'~₹14,000 owed per person in Kerala',tags:['Staff DA: ₹21,670 cr','Pensioner DR: ₹14,387 cr','Others: ₹12,676 cr']},
+    kpi_rd:{l:'Revenue Deficit',v:'2.58%',w:'Even just for day-to-day running costs (salaries, pensions, offices), Kerala spends more than it earns. 2.58% of the economy had to be borrowed for routine expenses — not for any new investment or development.',s:'bad',st:'Borrowing to pay routine bills, not to invest',tags:['Should be 0%','Means: salaries funded by debt','Trend: worsening']},
+    kpi_debt_gsdp:{l:'Debt / GSDP',v:'35.5%',w:"Total debt equals 35.5% of Kerala\'s full-year economic output (incl. KIIFB off-budget borrowings). On-budget alone is 33.2%. Either way, the legal ceiling of 32% is breached — more budget must go to interest payments.",s:'bad',st:'Legal ceiling breached — committed 32%, currently 35.5% (incl. KIIFB)',tags:['Legal ceiling: 32%','On-budget: 33.2%','Incl. KIIFB: 35.5%']},
+    kpi_tax_real:{l:'Own-Tax Realisation',v:'92%',w:'Kerala collected ₹92 for every ₹100 it planned in taxes. While close, even an 8% shortfall on a ₹91,515 cr target means ~₹7,800 cr less than expected — forcing extra borrowing to fill the gap.',s:'mid',st:'8% shortfall = ~₹7,800 cr less than budgeted',tags:['Target: ₹91,515 cr','Actual: ₹83,731 cr','Gap: ₹7,784 cr']},
+    kpi_transfer:{l:'Central Transfer Shortfall',v:'₹20,500 cr',w:'Kerala planned its budget assuming the Centre would send ₹59,774 cr. The Union Budget provided only ₹39,274 cr. The ₹20,500 cr gap is money Kerala counted on but did not receive.',s:'bad',st:'Centre gave ₹20,500 cr less than Kerala had planned for',tags:['Expected: ₹59,774 cr','Got: ₹39,274 cr','RDG: ₹0 vs ₹14,138 cr planned']},
+    kpi_bal:{l:'Closing Balance',v:'₹6,322 cr',w:'Cash left in the treasury on 31 March 2026. Looks positive, but this was largely achieved by borrowing ₹8,450 cr specifically in March. A borrowed cushion — not genuine savings.',s:'mid',st:'Positive but borrowed — ₹8,450 cr raised in March alone',tags:['Borrowed balance','March OMB: ₹8,450 cr','Not a genuine surplus']},
+    kpi_omb:{l:'Peak Open Market Borrowing',v:'₹53,666 cr',w:'Amount Kerala borrowed by issuing bonds to the market in 2024-25 — the highest ever. In 2015-16 it was ₹15,000 cr. A near-4x rise in a decade shows how fast dependence on borrowing has grown.',s:'bad',st:'4x rise in a decade — debt dependence growing fast',tags:['2015-16: ₹15,000 cr','2024-25: ₹53,666 cr','Growth: 258%']},
+    kpi_pse_loss:{l:'Accumulated PSE Loss',v:'₹78,851 cr',w:"Total losses built up over the years by ALL State-owned companies combined — KSRTC, KSEB, Water Authority and others. Not one year\'s figure — it is the growing mountain of past losses never recovered.",s:'bad',st:'Loss grew by ₹36k cr in just 4 years',tags:['2021-22: ₹31,571 cr','2024-25: ₹78,851 cr','Growing every year']},
+    kpi_gok_inv:{l:'GoK Investment in SLPEs',v:'₹44,846 cr',w:'Taxpayer money put into State-owned companies through share capital and loans. Compare it with the Returns KPI — the question is whether this investment is earning anything back.',s:'mid',st:'₹44,846 cr invested, only ₹249 cr returned',tags:['Paid-up capital + loans','Return rate: 0.55%','Compare: Returns KPI']},
+    kpi_returns:{l:'Returns to Govt',v:'₹249 cr',w:'Of ₹44,846 cr invested in State companies, the government received back only ₹249 cr as dividends in 2024-25. That is a return of 0.55% — far less than even a basic savings account would earn.',s:'bad',st:'0.55% return on investment — effectively unproductive',tags:['Dividend received','0.55% ROI','Savings a/c earns 4-6%']},
+    kpi_loan_arr:{l:'Loan Arrears to State',v:'₹25,182 cr',w:'State companies owe this amount in unpaid loans back to the government. KSRTC alone owes ₹11,679 cr — some since 1983. Unlikely to be fully recovered, making it a hidden drain on public funds.',s:'bad',st:'KSRTC owes ₹11,679 cr — some loans 40+ years old',tags:['KSRTC: ₹11,679 cr','KWA: ₹3,930 cr','KSEB: ₹1,837 cr']},
+    kpi_plan_share:{l:'Plan Share of Budget',v:'17.6%',w:'Only 17.6 paise out of every ₹1 the government spends goes to new development — roads, schools, hospitals. The remaining 82.4% goes to fixed costs like salaries, pensions and interest. Lowest share in 10 years.',s:'bad',st:'Decade low — development squeezed by fixed costs',tags:['2015-16: 21.8%','2025-26: 17.6%','Falling every year']},
+    kpi_plan_exp:{l:'Plan Expenditure',v:'₹41,288 cr',w:'Total spent on development in 2024-25. This is 136% of the approved outlay (₹30,370 cr) — more than sanctioned, partly because Central scheme funds and pending works from previous years are included.',s:'mid',st:'136% of outlay — includes CSS and prior-year pending works',tags:['Outlay: ₹30,370 cr','Spent: ₹41,288 cr','Includes CSS flows']},
+    kpi_welfare:{l:'SC/ST/OBC Welfare Share',v:'3.85%',w:'Share of development budget going to welfare schemes for SC, ST, OBC and minority communities. In 2017-18 it was 9.24%. The steady decline to 3.85% — the decade low — raises questions about prioritisation.',s:'bad',st:'Declined from 9.24% in 2017-18 to 3.85% now',tags:['2017-18: 9.24%','2025-26: 3.85%','Decade low']},
+    kpi_scsp:{l:'SCSP Delivery Rate',v:'83.5%',w:'The SC Sub-Plan reserves a specific budget for SC community welfare. 83.5% of that reserved amount was actually spent in 2024-25. Reasonably good, but 16.5% of welfare funds meant for SC communities went unspent.',s:'mid',st:'83.5% delivered — 16.5% of SC welfare funds went unspent',tags:['Reserved: ₹2,979 cr','Spent: ₹2,488 cr','Unspent: ₹491 cr']},
+    kpi_rev_rec:{l:'Revenue Receipts / GSDP',v:'10.7%',w:'Kerala collects only 10.7% of its economy as total revenue. The all-states average is 14.4%. This 3.7% gap means Kerala earns significantly less per unit of economic activity than comparable states — the root cause of persistent deficits.',s:'bad',st:'3.7% below all-states average — structural income weakness',tags:['Kerala: 10.7%','All states avg: 14.4%','Gap: 3.7 percentage points']},
+    kpi_fd_peer:{l:'Fiscal Deficit vs Peers',v:'3.78%',w:"Kerala\'s deficit of 3.78% is above both the all-states average (~3.3%) and the legal limit (3%). Among major states it is one of the higher deficits — showing the problem is relative to peers, not just absolute.",s:'bad',st:'Above all-states average (3.3%) and legal limit (3%)',tags:['Kerala: 3.78%','All states: ~3.3%','Legal limit: 3.0%']},
+    kpi_liab:{l:'Outstanding Liabilities vs Peers',v:'35.5%',w:"Kerala\'s total debt including KIIFB off-budget borrowings is 35.5% of GSDP — well above the 32% legal ceiling and higher than most comparable states. Even on-budget alone (33.2%) the ceiling is breached.",s:'bad',st:'Above legal ceiling and above most peer states',tags:['Incl. KIIFB: 35.5%','On-budget: 33.2%','Legal ceiling: 32%']},
+    kpi_owntax_peer:{l:'Own Tax / GSDP vs Peers',v:'6.4%',w:"Kerala collects own taxes equal to only 6.4% of its economy. Comparable states average ~7%. This lower own-tax capacity means more dependence on borrowing and Central transfers — a structural vulnerability.",s:'mid',st:'Below comparable states average (~7%) — tax gap',tags:['Kerala: 6.4%','Comparable avg: ~7%','Limits self-reliance']}
+  };
+
+})();
+
+
+/* ═══ KPI GUIDE DATA ══════════════════════════════════════════ */
+const KPI_GUIDE = {
+  'pg-snapshot': [
+    {label:'Total Outstanding Debt', value:'₹5.07L cr', red:false,
+     desc:'Everything Kerala has borrowed and not yet repaid — bonds, loans from the Centre, bank borrowings, and KIIFB off-budget liabilities. At 35.5% of GSDP (incl. KIIFB), it is significantly above the 32% legal ceiling. On-budget alone: 33.2%.'},
+    {label:'Fiscal Deficit (2025-26)', value:'3.78%', red:false,
+     desc:'For every ₹100 Kerala earned in 2025-26, it spent ₹103.78. The extra ₹3.78 had to be borrowed. The FRBM Act caps this at ≈3%.'},
+    {label:'Days on RBI Support (2025)', value:'262 days', red:true,
+     desc:'On 262 out of 365 days in 2025, the State treasury had no cash. It survived on emergency credit (WMA/OD) from the Reserve Bank of India — the worst on record.'},
+    {label:'Inherited Arrears', value:'₹48,733 cr', red:true,
+     desc:'Bills that existed before the current govt took charge — salary allowances (DA/DR) for 21,670+14,387 cr, contractor dues, health scheme claims and welfare payments.'},
+  ],
+  'pg-budget': [
+    {label:'Revenue Deficit (2025-26)', value:'2.58%', red:false,
+     desc:'Day-to-day operations (salaries, pensions, running costs) cost more than revenue collected. A persistent revenue deficit means routine spending is partly funded by borrowing.'},
+    {label:'Debt / GSDP (2025-26)', value:'35.5% (incl. KIIFB)', red:false,
+     desc:'For every ₹100 Kerala\'s economy produces, ₹33.20 is the State\'s total debt. The FRBM legal ceiling is ₹32. Kerala has been above this limit every year for a decade.'},
+    {label:'Own-Tax Realisation', value:'92%', red:false,
+     desc:'For every ₹100 budgeted in own taxes (SGST, property tax, etc.), ₹92 was actually collected in 2025-26. Every shortfall adds to borrowing pressure.'},
+    {label:'Central Transfer Shortfall', value:'₹20,500 cr', red:true,
+     desc:'Kerala expected ₹59,774 cr from the Centre (share of central taxes + revenue deficit grants). The Union Budget provided only ₹39,274 cr — a ₹20,500 cr gap in income.'},
+  ],
+  'pg-cash': [
+    {label:'Days on RBI Support (2025)', value:'262 days', red:true,
+     desc:'262 days in 2025, the treasury was empty and the State used emergency RBI overdraft to pay salaries and bills. This is the worst figure ever recorded.'},
+    {label:'Closing Balance (2025-26)', value:'₹6,322 cr', red:false,
+     desc:'Cash in the State treasury on 31 March 2026. Positive, but misleading — much of this was funded by a surge of OMB borrowing in the last weeks of March.'},
+    {label:'Peak OMB (2024-25)', value:'₹53,666 cr', red:false,
+     desc:'Open Market Borrowing — bonds sold to banks and investors. Kerala raised ₹53,666 cr in 2024-25 alone, the highest ever, just to fund ongoing operations.'},
+    {label:'Inherited Arrears', value:'₹48,733 cr', red:true,
+     desc:'Total unpaid dues: staff DA (₹21,670 cr), pensioner DR (₹14,387 cr), contractor bill discounting (₹3,431 cr), Supplyco, KASP health claims and welfare arrears.'},
+  ],
+  'pg-pse': [
+    {label:'Accumulated PSE Loss', value:'₹78,851 cr', red:true,
+     desc:'NOT a single year\'s loss — this is the total of all unrealised losses since Kerala\'s public companies were formed. The pile grew from ₹32k cr (2021-22) to ₹79k cr (2024-25) in just 4 years.'},
+    {label:'GoK Investment in SLPEs', value:'₹44,846 cr', red:false,
+     desc:'Total paid-up capital and long-term loans provided by the State government to its public enterprises as of 2024-25.'},
+    {label:'Returns to Govt', value:'₹249 cr', red:false,
+     desc:'Dividends and profit received back from all State-owned companies in 2024-25. Compare this to ₹4,000+ cr put in as subsidies and support — the return is minimal.'},
+    {label:'Loan Arrears to State', value:'₹25,182 cr', red:true,
+     desc:'Loans the State gave to its own companies that have not been repaid. KSRTC owes ₹11,679 cr, KWA ₹3,930 cr, KSEB ₹1,837 cr. Some loans date to the 1970s and 80s.'},
+  ],
+  'pg-plan': [
+    {label:'Plan Share of Budget', value:'17.6%', red:false,
+     desc:'Only 17.6 paise of every ₹1 the government spends goes toward new development projects. The remaining 82 paise covers salaries, pensions, interest and routine costs. Decade-low.'},
+    {label:'Plan Expenditure (2024-25)', value:'₹41,288 cr', red:false,
+     desc:'Total spending on new development — roads, buildings, welfare schemes — in 2024-25. This was 136% of the officially approved outlay because of CSS and legacy project spending.'},
+    {label:'SC/ST/OBC Welfare Share', value:'3.85%', red:false,
+     desc:'Only 3.85% of the development budget reached SC/ST/OBC and minority welfare in 2025-26 — down from 9.24% in 2017-18. A steadily declining trend.'},
+    {label:'SCSP Delivery (2024-25)', value:'83.5%', red:false,
+     desc:'83.5% of the ring-fenced Scheduled Caste Sub-Plan budget was actually spent and reached the communities it was meant for. 16.5% of the reserved welfare money was unused.'},
+  ],
+  'pg-peer': [
+    {label:'Revenue Receipts / GSDP', value:'10.7%', red:false,
+     desc:'Kerala collects only 10.7% of its economy as government revenue. The all-India average for comparable states is ~14.4%. Kerala\'s own revenue base is relatively narrow.'},
+    {label:'Fiscal Deficit / GSDP', value:'3.78%', red:true,
+     desc:'Kerala\'s spending gap as a % of its economy — above the 3.3% all-states average and the FRBM target. Kerala consistently runs a higher deficit than peer states.'},
+    {label:'Outstanding Liabilities', value:'35.5% (incl. KIIFB)', red:true,
+     desc:'Kerala\'s total debt as % of economy — above the 32% FRBM ceiling and above the debt level of most comparable states. One of the highest debt burdens in India.'},
+    {label:'Own Tax / GSDP', value:'6.4%', red:false,
+     desc:'Kerala collects 6.4% of its economy as own tax — below comparable states and declining. SGST (2.65%) is the largest single component but still below the peer average.'},
+  ],
+};
+
+let kpiOpen = false;
+function toggleKpiPanel(){
+  kpiOpen = !kpiOpen;
+  document.getElementById('kpi-panel').classList.toggle('open', kpiOpen);
+  document.getElementById('kpi-backdrop').classList.toggle('open', kpiOpen);
+}
+function updateKpiPanel(pid){
+  if(!document.getElementById('kpi-panel-page')) return;
+  const cards = KPI_GUIDE[pid] || [];
+  const pageName = PAGES[pid]?.title || '';
+  document.getElementById('kpi-panel-page').textContent = pageName;
+  const body = document.getElementById('kpi-panel-body');
+  body.innerHTML = cards.map(c =>
+    `<div class="kpi-guide-card">
+      <div class="kpi-guide-label">${c.label}</div>
+      <div class="kpi-guide-value${c.red?' red':''}">${c.value}</div>
+      <div class="kpi-guide-desc">${c.desc}</div>
+    </div>`).join('');
+}
+document.addEventListener('keydown', e => {if(e.key==='Escape'&&kpiOpen)toggleKpiPanel();});
+
+/* patch navigate to also update KPI panel */
+const _navOrigKpi = navigate;
+window.navigate = function(pid, el){
+  _navOrigKpi(pid, el);
+  updateKpiPanel(pid);
+};
+
+/* safe DOMContentLoaded init */
+document.addEventListener('DOMContentLoaded', function(){
+  if(document.getElementById('kpi-panel-page')) updateKpiPanel('pg-snapshot');
+  if(document.getElementById('abvPageName'))    updateAbv('pg-snapshot');
+});
+</script>
+</body>
+</html>
