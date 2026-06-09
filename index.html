@@ -657,7 +657,7 @@ html,body{height:100%;overflow:hidden;font-family:"Mukta",sans-serif;color:var(-
   <div class="sidebar">
     <div class="sb-brand" style="flex-direction:column;align-items:center;gap:8px;padding:16px 12px 12px;border-bottom:1px solid rgba(255,255,255,.1)">
       
-      <span class="sb-name" style="font-size:.64rem;text-align:center;line-height:1.3">KERALA FISCAL HEALTH DASHBOARD<span class="ml" style="display:block;margin-top:2px">കേരള ധനസ്ഥിതി</span></span>
+      <span class="sb-name" style="font-size:.64rem;text-align:center;line-height:1.3">KERALA FISCAL HEALTH DASHBOARD<span class="ml" style="display:block;margin-top:2px"></span></span>
     </div>
 
     <!-- Slicer 1: Measure basis (like Camerry's AGE slicer) -->
@@ -695,7 +695,7 @@ html,body{height:100%;overflow:hidden;font-family:"Mukta",sans-serif;color:var(-
         
         <div>
           <div class="hdr-title" id="hdrTitle">Executive Snapshot</div>
-          <div class="hdr-ml" id="hdrMl">ഒരു നോട്ടത്തിൽ</div>
+          <div class="hdr-ml" id="hdrMl"></div>
         </div>
       </div>
       <button class="kpi-guide-btn" onclick="toggleKpiPanel()"><i class="fas fa-chart-bar"></i> KPI Guide</button>
@@ -1183,12 +1183,12 @@ function fillAlerts(id){const el=document.getElementById(id);if(!el||el.dataset.
 /* nav + lazy render */
 
 const PAGES = {
-  'pg-snapshot':{num:'01',title:'Executive Snapshot',ml:'ഒരു നോട്ടത്തിൽ'},
-  'pg-budget':  {num:'02',title:'Budget & Deficits',ml:'ബജറ്റ് കമ്മി'},
-  'pg-cash':    {num:'03',title:'Cash & Treasury',ml:'ഖജനാവ്'},
-  'pg-pse':     {num:'04',title:'Public Enterprises',ml:'പൊതു കോർപ്പറേഷൻ'},
-  'pg-plan':    {num:'05',title:'Plan & Development',ml:'പദ്ധതി ചെലവ്'},
-  'pg-peer':    {num:'06',title:'Peer Comparison',ml:'സമതുലനം'}
+  'pg-snapshot':{num:'01',title:'Executive Snapshot',ml:''},
+  'pg-budget':  {num:'02',title:'Budget & Deficits',ml:''},
+  'pg-cash':    {num:'03',title:'Cash & Treasury',ml:''},
+  'pg-pse':     {num:'04',title:'Public Enterprises',ml:''},
+  'pg-plan':    {num:'05',title:'Plan & Development',ml:''},
+  'pg-peer':    {num:'06',title:'Peer Comparison',ml:''}
 };
 /* ALERTS defined in JS core */
 
